@@ -63,7 +63,7 @@ define(function(require) {
             console.log(e);
         }
 
-
+        ldrp = loadRawProject;
 
         var canvas = docById('myCanvas');
 
@@ -1746,121 +1746,94 @@ define(function(require) {
         }
 
         function sync(){
-            alert("sync works");
             ldrp = loadRawProject;
-            var msg4 = {type:9, group: groupId};
-            socket.send(JSON.stringify(msg4));
-            // loadRawProject(data);
-
-
+            saveLocally();
+            var p = localStorage.currentProject;
+            var data = localStorage['SESSION' + p];
+            sendMessage(data);
         }
 
         function share(){
-            var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.ChatPrototype"};
+            var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.TurtleBlocks"};
             socket.send(JSON.stringify(message2));
         }
 
         function showGroups(){
-            // alert("it works!!");
-            // 
-            // helpIdx = 0;
-            // firstTime = 1;
             sendRequestToListGroups();
 
             var helpContainer2 = null;
-            // if (firstTime) {
-                // if (helpContainer == null) {
-                    // alert(firstTime);
-                    helpContainer2 = new createjs.Container();
-                    stage.addChild(helpContainer2);
-                    helpContainer2.x = 65;
-                    helpContainer2.y = 65;
+            helpContainer2 = new createjs.Container();
+            stage.addChild(helpContainer2);
+            helpContainer2.x = 65;
+            helpContainer2.y = 65;
 
-                    helpContainer2.on('click', function(event) {
-                        var bounds = helpContainer2.getBounds();
-                        if (event.stageY < helpContainer2.y + bounds.height / 2) {
-                            helpContainer2.visible = false;
-                            docById('shareElem').style.visibility = 'hidden';
-                        } else {
-                            helpIdx += 1;
-                            if (helpIdx >= HELPCONTENT.length) {
-                                helpIdx = 0;
-                            }
-                            var imageScale = 55 * scale; 
-                            // helpElem.innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '" style="height:' + imageScale + 'px; width: auto"></img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>'
-                        }
-                        update = true;
-                    });
-
-                    var img = new Image();
-                    img.onload = function() {
-                        // console.log(scale);
-                        bitmap = new createjs.Bitmap(img);
-                        if (scale > 1) {
-                            bitmap.scaleX = bitmap.scaleY = bitmap.scale = scale;
-                        } else {
-                            bitmap.scaleX = bitmap.scaleY = bitmap.scale = 1.125;
-                        }
-
-                        helpContainer2.addChild(bitmap)
-                        var bounds = helpContainer2.getBounds();
-                        var hitArea = new createjs.Shape();
-                        hitArea.graphics.beginFill('#FFF').drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-                        hitArea.x = 0;
-                        hitArea.y = 0;
-                        helpContainer2.hitArea = hitArea;
-
-                        // docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>'
-                        // if (!doneTour) {
-                            docById('shareElem').style.visibility = 'visible';
-                        // }
-                        update = true;
+            helpContainer2.on('click', function(event) {
+                var bounds = helpContainer2.getBounds();
+                if (event.stageY < helpContainer2.y + bounds.height / 2) {
+                    helpContainer2.visible = false;
+                    docById('shareElem').style.visibility = 'hidden';
+                } else {
+                    helpIdx += 1;
+                    if (helpIdx >= HELPCONTENT.length) {
+                        helpIdx = 0;
                     }
+                    var imageScale = 55 * scale; 
+                }
+                update = true;
+            });
 
-                    img.src = 'images/help-container.svg';
-                // }
-                
-                var shareElem = docById('shareElem');
-                shareElem.style.position = 'absolute';
-                shareElem.style.display = 'block';
-                shareElem.style.paddingLeft = 20 * scale + 'px';
-                shareElem.style.paddingRight = 20 * scale + 'px';
-                shareElem.style.paddingTop = '0px';
-                shareElem.style.paddingBottom = 20 * scale + 'px';
-                shareElem.style.fontSize = 20 * scale + 'px';
-                shareElem.style.color = '#ffffff';
-                shareElem.style.left = 65 * scale + 'px';
-                shareElem.style.top = 105 * scale + 'px';
-                var w = Math.min(300, 300 * scale);
-                var h = Math.min(300, 300 * scale);
-                shareElem.style.width = w + 'px';
-                shareElem.style.height = h + 'px';
-
+            var img = new Image();
+            img.onload = function() {
+                bitmap = new createjs.Bitmap(img);
                 if (scale > 1) {
                     bitmap.scaleX = bitmap.scaleY = bitmap.scale = scale;
+                } else {
+                    bitmap.scaleX = bitmap.scaleY = bitmap.scale = 1.125;
                 }
-            // }
 
-            // var doneTour = localStorage.doneTour === 'true';
-            // alert(doneTour);
-            // if (firstTime && doneTour) {
-            //     docById('helpElem').style.visibility = 'hidden';
-            //     helpContainer2.visible = false;
-            // } else {
-
-                // localStorage.doneTour = 'true';
-                // docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>'
+                helpContainer2.addChild(bitmap)
+                var bounds = helpContainer2.getBounds();
+                var hitArea = new createjs.Shape();
+                hitArea.graphics.beginFill('#FFF').drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
+                hitArea.x = 0;
+                hitArea.y = 0;
+                helpContainer2.hitArea = hitArea;
                 docById('shareElem').style.visibility = 'visible';
-                helpContainer2.visible = true;
                 update = true;
+            }
+
+            img.src = 'images/help-container.svg';
+                
+            var shareElem = docById('shareElem');
+            shareElem.style.position = 'absolute';
+            shareElem.style.display = 'block';
+            shareElem.style.paddingLeft = 20 * scale + 'px';
+            shareElem.style.paddingRight = 20 * scale + 'px';
+            shareElem.style.paddingTop = '0px';
+            shareElem.style.paddingBottom = 20 * scale + 'px';
+            shareElem.style.fontSize = 20 * scale + 'px';
+            shareElem.style.color = '#ffffff';
+            shareElem.style.left = 65 * scale + 'px';
+            shareElem.style.top = 105 * scale + 'px';
+            var w = Math.min(300, 300 * scale);
+            var h = Math.min(300, 300 * scale);
+            shareElem.style.width = w + 'px';
+            shareElem.style.height = h + 'px';
+
+            if (scale > 1) {
+                bitmap.scaleX = bitmap.scaleY = bitmap.scale = scale;
+            }
+            
+            docById('shareElem').style.visibility = 'visible';
+            helpContainer2.visible = true;
+            update = true;
 
                 // Make sure the palettes and the secondary menus are
                 // visible while help is shown.
-                palettes.show();
-                if (!menuButtonsVisible) {
-                    doMenuAnimation(1);
-                }
-            // }
+            palettes.show();
+            if (!menuButtonsVisible) {
+                doMenuAnimation(1);
+            }
         }
     });
 });

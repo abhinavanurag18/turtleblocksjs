@@ -14,7 +14,6 @@ var msgLeaveSharedActivity = 5;
 var msgOnConnectionClosed = 6;
 var msgOnSharedActivityUserChanged = 7;
 var msgSendMessage = 8;
-var msgSendTurtleData = 9;
 var groupId = null;
 var ldrp = null;
 var shared = 0;
@@ -39,8 +38,8 @@ socket.onmessage = function(evt){
 		case msgJoinSharedActivity :
 			groupId = res.data.id;
 			break;
-		case msgSendTurtleData :
-			ldrp(res.data);
+		case msgSendMessage :
+			ldrp(res.data.content);
 			break;
 	}
 }
@@ -64,10 +63,10 @@ function sync(){
 
 }
 
-function share(){
-    var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.ChatPrototype"};
-    socket.send(JSON.stringify(message2));
-}
+// function share(){
+//     var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.TurtleBlocks"};
+//     socket.send(JSON.stringify(message2));
+// }
 
 function fillContentInShare(res){
 	var j,k;
@@ -93,4 +92,9 @@ function groupClick(that){
 	// alert(group);
 	var msg = {type : msgJoinSharedActivity, group : group};
 	socket.send(JSON.stringify(msg));
+}
+
+function sendMessage(data){
+	var msg3 = {type : msgSendMessage, group : groupId, data : {user : message1 , content : data}};
+	socket.send(JSON.stringify(msg3));
 }
