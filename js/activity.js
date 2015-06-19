@@ -19,6 +19,8 @@ if (lang.indexOf("-") != -1) {
     document.webL10n.setLanguage(lang);
 }
 
+var socket = null;
+
 define(function(require) {
     require('activity/platformstyle');
 
@@ -47,6 +49,7 @@ define(function(require) {
     require('activity/blockfactory');
     require('activity/analytics');
     require('prefixfree.min');
+    require('activity/presence');
 
     // Manipulate the DOM only when it is ready.
     require(['domReady!'], function(doc) {
@@ -55,9 +58,12 @@ define(function(require) {
         try {
             meSpeak.loadConfig('lib/mespeak_config.json');
             meSpeak.loadVoice('lib/voices/en/en.json');
+            // socket = connect();
         } catch (e) {
             console.log(e);
         }
+
+
 
         var canvas = docById('myCanvas');
 
@@ -1436,7 +1442,10 @@ define(function(require) {
                 ['palette', changePaletteVisibility],
                 ['hide-blocks', changeBlockVisibility],
                 ['collapse-blocks', toggleCollapsibleStacks],
-                ['help', showHelp]
+                ['help', showHelp],
+                ['share',share],
+                ['showGroups',showGroups],
+                ['sync',sync]
             ];
 
             if (showPalettesPopover) {
@@ -1525,7 +1534,7 @@ define(function(require) {
 
         function showHelp(firstTime) {
             helpIdx = 0;
-
+            // alert(firstTime);
             if (firstTime) {
                 if (helpContainer == null) {
                     helpContainer = new createjs.Container();
@@ -1578,7 +1587,7 @@ define(function(require) {
                 }
 
                 var helpElem = docById('helpElem');
-                helpElem.style.position= 'absolute';
+                helpElem.style.position = 'absolute';
                 helpElem.style.display = 'block';
                 helpElem.style.paddingLeft = 20 * scale + 'px';
                 helpElem.style.paddingRight = 20 * scale + 'px';
@@ -1734,6 +1743,124 @@ define(function(require) {
                     moved = false;
                 });
             });
+        }
+
+        function sync(){
+            alert("sync works");
+            ldrp = loadRawProject;
+            var msg4 = {type:9, group: groupId};
+            socket.send(JSON.stringify(msg4));
+            // loadRawProject(data);
+
+
+        }
+
+        function share(){
+            var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.ChatPrototype"};
+            socket.send(JSON.stringify(message2));
+        }
+
+        function showGroups(){
+            // alert("it works!!");
+            // 
+            // helpIdx = 0;
+            // firstTime = 1;
+            sendRequestToListGroups();
+
+            var helpContainer2 = null;
+            // if (firstTime) {
+                // if (helpContainer == null) {
+                    // alert(firstTime);
+                    helpContainer2 = new createjs.Container();
+                    stage.addChild(helpContainer2);
+                    helpContainer2.x = 65;
+                    helpContainer2.y = 65;
+
+                    helpContainer2.on('click', function(event) {
+                        var bounds = helpContainer2.getBounds();
+                        if (event.stageY < helpContainer2.y + bounds.height / 2) {
+                            helpContainer2.visible = false;
+                            docById('shareElem').style.visibility = 'hidden';
+                        } else {
+                            helpIdx += 1;
+                            if (helpIdx >= HELPCONTENT.length) {
+                                helpIdx = 0;
+                            }
+                            var imageScale = 55 * scale; 
+                            // helpElem.innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '" style="height:' + imageScale + 'px; width: auto"></img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>'
+                        }
+                        update = true;
+                    });
+
+                    var img = new Image();
+                    img.onload = function() {
+                        // console.log(scale);
+                        bitmap = new createjs.Bitmap(img);
+                        if (scale > 1) {
+                            bitmap.scaleX = bitmap.scaleY = bitmap.scale = scale;
+                        } else {
+                            bitmap.scaleX = bitmap.scaleY = bitmap.scale = 1.125;
+                        }
+
+                        helpContainer2.addChild(bitmap)
+                        var bounds = helpContainer2.getBounds();
+                        var hitArea = new createjs.Shape();
+                        hitArea.graphics.beginFill('#FFF').drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
+                        hitArea.x = 0;
+                        hitArea.y = 0;
+                        helpContainer2.hitArea = hitArea;
+
+                        // docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>'
+                        // if (!doneTour) {
+                            docById('shareElem').style.visibility = 'visible';
+                        // }
+                        update = true;
+                    }
+
+                    img.src = 'images/help-container.svg';
+                // }
+                
+                var shareElem = docById('shareElem');
+                shareElem.style.position = 'absolute';
+                shareElem.style.display = 'block';
+                shareElem.style.paddingLeft = 20 * scale + 'px';
+                shareElem.style.paddingRight = 20 * scale + 'px';
+                shareElem.style.paddingTop = '0px';
+                shareElem.style.paddingBottom = 20 * scale + 'px';
+                shareElem.style.fontSize = 20 * scale + 'px';
+                shareElem.style.color = '#ffffff';
+                shareElem.style.left = 65 * scale + 'px';
+                shareElem.style.top = 105 * scale + 'px';
+                var w = Math.min(300, 300 * scale);
+                var h = Math.min(300, 300 * scale);
+                shareElem.style.width = w + 'px';
+                shareElem.style.height = h + 'px';
+
+                if (scale > 1) {
+                    bitmap.scaleX = bitmap.scaleY = bitmap.scale = scale;
+                }
+            // }
+
+            // var doneTour = localStorage.doneTour === 'true';
+            // alert(doneTour);
+            // if (firstTime && doneTour) {
+            //     docById('helpElem').style.visibility = 'hidden';
+            //     helpContainer2.visible = false;
+            // } else {
+
+                // localStorage.doneTour = 'true';
+                // docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>'
+                docById('shareElem').style.visibility = 'visible';
+                helpContainer2.visible = true;
+                update = true;
+
+                // Make sure the palettes and the secondary menus are
+                // visible while help is shown.
+                palettes.show();
+                if (!menuButtonsVisible) {
+                    doMenuAnimation(1);
+                }
+            // }
         }
     });
 });
