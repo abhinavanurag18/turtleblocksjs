@@ -18,7 +18,7 @@ var groupId = null;
 var ldrp = null;
 var shared = 0;
 
-var socket = new WebSocket("ws://localhost:8039");
+var socket = new WebSocket("ws://server.sugarizer.org:8039");
 socket.onopen = function(){
 	alert("Connected to the server");
 	socket.send(JSON.stringify(message1));
