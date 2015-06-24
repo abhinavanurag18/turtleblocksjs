@@ -22,7 +22,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.peers = [];
 	this.turtles = turtles;
 	this.blocks = blocks;
-	this.socket = new WebSocket("ws://localhost:8039");
+	this.socket = new WebSocket("ws://server.sugarizer.org:8039");
 	this.socket.onopen = function(){
 		alert("Connected to the server");
 		me.socket.send(JSON.stringify(message1));
