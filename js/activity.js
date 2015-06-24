@@ -63,8 +63,6 @@ define(function(require) {
             console.log(e);
         }
 
-        ldrp = loadRawProject;
-
         var canvas = docById('myCanvas');
 
         var queue = new createjs.LoadQueue(false);
@@ -95,6 +93,7 @@ define(function(require) {
         var clearBox;
         var utilityBox;
         var thumbnails;
+        var presence = null;
         var buttonsVisible = true;
         var headerContainer = null;
         var toolbarButtonsVisible = true;
@@ -404,6 +403,7 @@ define(function(require) {
             trashcan = new Trashcan(canvas, trashContainer, cellSize, refreshCanvas);
             turtles = new Turtles(canvas, turtleContainer, refreshCanvas);
             blocks = new Blocks(canvas, blocksContainer, refreshCanvas, trashcan, stage.update);
+            presence = new SugarPresence(loadRawProject,saveLocally, turtles, blocks);
             palettes = initPalettes(canvas, refreshCanvas, palettesContainer, cellSize, refreshCanvas, trashcan, blocks);
 
             palettes.setBlocks(blocks);
@@ -1746,20 +1746,15 @@ define(function(require) {
         }
 
         function sync(){
-            ldrp = loadRawProject;
-            saveLocally();
-            var p = localStorage.currentProject;
-            var data = localStorage['SESSION' + p];
-            sendMessage(data);
+            presence.sync();
         }
 
         function share(){
-            var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.TurtleBlocks"};
-            socket.send(JSON.stringify(message2));
+            presence.share();
         }
 
         function showGroups(){
-            sendRequestToListGroups();
+            presence.sendRequestToListGroups();
 
             var helpContainer2 = null;
             helpContainer2 = new createjs.Container();

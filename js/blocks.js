@@ -1234,6 +1234,7 @@ function Blocks(canvas, stage, refreshCanvas, trashcan, updateStage) {
         if (name == 'namedbox' || name == 'nameddo') {
             this.blockList.push(new Block(this.protoBlockDict[name], this, postProcessArg[1]));
         } else {
+            
             this.blockList.push(new Block(this.protoBlockDict[name], this));
         }
         if (last(this.blockList) == null) {
