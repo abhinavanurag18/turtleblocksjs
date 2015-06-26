@@ -25,7 +25,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.turtles = turtles;
 	this.blocks = blocks;
 	this.shared = false;
-	this.socket = new WebSocket("ws://localhost:8039");
+	this.socket = new WebSocket("ws://server.sugarizer.org:8039");
 	var me = this;
 	this.socket.onopen = function(){
 		var sideElem = docById("sideElem");
