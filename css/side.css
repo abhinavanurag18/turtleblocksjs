@@ -1,0 +1,87 @@
+body {
+	height : 100%;
+}
+#sideElem {
+	position: absolute;
+	right : 10px;
+	bottom: 10px;
+	width: 5%;
+	height: 10%;
+	
+	background-color: #000;
+	border-style: solid;
+	border-color: #000;
+	border-radius: 15px;
+	background-image: url("../icons/share-button.svg");
+	background-repeat: no-repeat;
+	background-position: center;
+	z-index: 999;
+	display: none;
+	cursor : pointer;
+}
+
+#syncElem {
+	position: absolute;
+	right : 90px;
+	bottom: 10px;
+	width: 5%;
+	height: 10%;
+	
+	background-color: #000;
+	border-style: solid;
+	border-color: #000;
+	border-radius: 15px;
+	background-image: url("../icons/sync-button.svg");
+	background-repeat: no-repeat;
+	background-position: center;
+	z-index: 999;
+	display: none;
+	cursor : pointer;
+}
+
+.mask {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: #000;
+	opacity: 0.5;
+	display: none;
+}
+
+.collabBox {
+	position: absolute;
+	top : 10%;
+	left: 15%;
+	width : 70%;
+	height: 80%;
+	z-index: 1000;
+	background-color: #000;
+	display: none;
+	border-radius: 10px;
+	padding: 30px;
+	color: #fff;
+}
+.head-box {
+	position: relative;
+	
+	width : 100%;
+	height : 10%;
+}
+
+.groupItem {
+	position: relative;
+	width: 70%;
+	height: 10%;
+	cursor: pointer;
+	padding: 10px;
+	padding-bottom: 5px;
+}
+.groupItem:hover{
+	background-color: #111;
+}
+
+#groupList{
+	width: 100%;
+	height: 80%;
+	overflow-y: auto; 
+}

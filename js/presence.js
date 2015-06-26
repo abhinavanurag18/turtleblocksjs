@@ -1,3 +1,5 @@
+require(['jquery-1.10.1']);
+
 var maximum = 100;
 var minimum = 1;
 var randomnumber = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
@@ -22,13 +24,27 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.peers = [];
 	this.turtles = turtles;
 	this.blocks = blocks;
-	this.socket = new WebSocket("ws://server.sugarizer.org:8039");
+	this.shared = false;
+	this.socket = new WebSocket("ws://localhost:8039");
+	var me = this;
 	this.socket.onopen = function(){
-		alert("Connected to the server");
+		var sideElem = docById("sideElem");
+		sideElem.style.display = "block";
 		me.socket.send(JSON.stringify(message1));
+		me.sendRequestToListGroups();
+	}
+	this.socket.onerror = function(){
+		alert("Please check your internet connection. You are disconnected from the collaboration server");
+		var sideElem = docById("sideElem");
+		sideElem.style.display = "none";
 	}
 
-	var me = this;
+	this.socket.onclose = function(){
+		var sideElem = docById("sideElem");
+		sideElem.style.display = "none";
+	}
+
+	
 
 	this.socket.onmessage = function(evt){
 		var res = JSON.parse(evt.data);
@@ -37,12 +53,22 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 			case msgCreateSharedActivity :
 				groupId = res.data;
 				shared = 1;
+				me.shared = true;
+				var groupDiv = docById('groupDetail');
+				groupDiv.innerHTML = "<h4>Present Group : " + groupId + "</h4>";
+				var syncEl = docById('syncElem');
+				syncEl.style.display = "block";
+				// alert(groupDiv);
 				break;
 			case msgListSharedActivities :
 				me.fillContentInShare(res);
 				break;
 			case msgJoinSharedActivity :
 				groupId = res.data.id;
+				var groupDiv = docById('groupDetail');
+				groupDiv.innerHTML = "<h4>Present Group : " + groupId + "</h4>";
+				var syncEl = docById('syncElem');
+				syncEl.style.display = "block";
 				break;
 			case msgSendMessage :
 				/**
@@ -152,13 +178,16 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 
 	this.fillContentInShare = function(res){
 		var j,k;
-		var shareElem = docById('shareElem');
-		shareElem.innerHTML = "<p>Present Group : "+groupId+"</p>";
+		// var shareElem = docById('shareElem');
+		var groupList = docById('groupList');
+		// shareElem.innerHTML = "<p>Present Group : "+groupId+"</p>";
 		for(j in res.data){
-			shareElem.innerHTML += "<button id='group' class='"+res.data[j].id+"'>"+res.data[j].id+"</button><br />";				
+			groupList.innerHTML += "<div class='groupItem' id='groupId' data11='"+res.data[j].id+"'><b>"+res.data[j].id+"</b></div><br />";				
 		}
 		// $('.group').on('click',groupClick);
-		var group = docById('group');
+		// var group = document.getElementsByClassName("groupItem");
+		var group = docById('groupId');
+		// alert(group);
 		group.onclick = function(){
 			me.groupClick(this);
 		}
@@ -170,7 +199,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 
 	this.groupClick = function(that){
 		
-		var group = that.getAttribute('class');
+		var group = that.getAttribute('data11');
 		// alert(group);
 		var msg = {type : msgJoinSharedActivity, group : group};
 		me.socket.send(JSON.stringify(msg));

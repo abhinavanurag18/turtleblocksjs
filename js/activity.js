@@ -50,6 +50,8 @@ define(function(require) {
     require('activity/analytics');
     require('prefixfree.min');
     require('activity/presence');
+    require('jquery-1.10.1');
+    
 
     // Manipulate the DOM only when it is ready.
     require(['domReady!'], function(doc) {
@@ -406,11 +408,18 @@ define(function(require) {
             presence = new SugarPresence(loadRawProject,saveLocally, turtles, blocks);
             palettes = initPalettes(canvas, refreshCanvas, palettesContainer, cellSize, refreshCanvas, trashcan, blocks);
 
+            // var share = docById('share');
+            // share.onclick = function(){
+
+            //     presence.share();
+            // }
             palettes.setBlocks(blocks);
             turtles.setBlocks(blocks);
             blocks.setTurtles(turtles);
             blocks.setErrorMsg(errorMsg);
             blocks.makeCopyPasteButtons(makeButton, updatePasteButton);
+
+            // collabBox(presence);
 
             // TODO: clean up this mess.
             logo = new Logo(canvas, blocks, turtles, turtleContainer,
@@ -1443,9 +1452,9 @@ define(function(require) {
                 ['hide-blocks', changeBlockVisibility],
                 ['collapse-blocks', toggleCollapsibleStacks],
                 ['help', showHelp],
-                ['share',share],
-                ['showGroups',showGroups],
-                ['sync',sync]
+                // ['share',share],
+                // ['showGroups',showGroups],
+                // ['sync',sync]
             ];
 
             if (showPalettesPopover) {
@@ -1751,6 +1760,23 @@ define(function(require) {
 
         function share(){
             presence.share();
+        }
+
+        var sideEl = docById('sideElem');
+        sideEl.onclick = function(){
+            // alert("It works here too.");
+            presence.sendRequestToListGroups();
+        }
+
+        var share = docById('share');
+        share.onclick = function(){
+            // alert("it works here");
+            presence.share();
+        }
+
+        var sync = docById('syncElem');
+        sync.onclick = function(){
+            presence.sync();
         }
 
         function showGroups(){
