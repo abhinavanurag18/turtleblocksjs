@@ -61,6 +61,15 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 				// alert(groupDiv);
 				break;
 			case msgListSharedActivities :
+				// if(res.data.length > 0){
+				// 	for(var i in res.data[0]){
+				// 		if(i == "users"){
+				// 			alert(res.data[0][i][0]);	
+				// 		}
+						
+				// 	}
+				// }
+				
 				me.fillContentInShare(res);
 				break;
 			case msgJoinSharedActivity :
@@ -181,8 +190,9 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 		// var shareElem = docById('shareElem');
 		var groupList = docById('groupList');
 		// shareElem.innerHTML = "<p>Present Group : "+groupId+"</p>";
+		groupList.innerHTML = "";
 		for(j in res.data){
-			groupList.innerHTML += "<div class='groupItem' id='groupId' data11='"+res.data[j].id+"'><b>"+res.data[j].id+"</b></div><br />";				
+			groupList.innerHTML += "<div class='groupItem' id='groupId' data11='"+res.data[j].id+"'><b>User "+res.data[j].users[0]+"</b></div><br />";				
 		}
 		// $('.group').on('click',groupClick);
 		// var group = document.getElementsByClassName("groupItem");
