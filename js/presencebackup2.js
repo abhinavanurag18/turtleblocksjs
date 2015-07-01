@@ -1,11 +1,11 @@
-require(['activity/xocolor']);
+require(['jquery-1.10.1']);
 
 var maximum = 100;
 var minimum = 1;
 var randomnumber = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
 var username = "User "+randomnumber;
 var ntId = randomnumber;
-var message1 = {name : username, networkId : ntId, colorvalue : {stroke : "#5E008C", fill : "#FF8F00"}};
+var message1 = {name : username, networkId : ntId, colorValue : {stroke : "#5E008C", fill : "#FF8F00"}};
 var msgInit = 0;
 var msgListUsers = 1;
 var msgCreateSharedActivity = 2;
@@ -17,11 +17,6 @@ var msgOnSharedActivityUserChanged = 7;
 var msgSendMessage = 8;
 var groupId = null;
 var shared = 0;
-var xoPalette = xocolor;
-var colorizedColor = null;
-var ownerColor = 0;
-var icons = {directory:"icons",icon:"module-about_me.svg"};
-var iconColorCache = { names : [], values : []};
 
 function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.loadRawProject = loadRawProject;
@@ -31,166 +26,127 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.blocks = blocks;
 	this.logo = null;
 	this.shared = false;
-	this.server = "ws://server.sugarizer.org:8039";
-	this.socket = null;
-	this.testSocket = null;
-	this.collab = null;
-	this.usersRes = null;
-	this.groupsRes = null;
+	this.socket = new WebSocket("ws://localhost:8039");
 	var me = this;
-	this.testServer = function(){
-		this.testSocket = new WebSocket(this.server);
-		this.testSocket.onopen = function(){
-			var sideElem = docById("sideElem");
-			sideElem.style.display = "block";
-			this.close();
-		}
-
-		this.testSocket.onerror = function(){
-			alert("Please check your internet connection. You are disconnected from the collaboration server");
-			var sideElem = docById("sideElem");
-			sideElem.style.display = "none";
-		}
+	this.socket.onopen = function(){
+		var sideElem = docById("sideElem");
+		sideElem.style.display = "block";
+		me.socket.send(JSON.stringify(message1));
+		me.setDispatch();
+		me.sendRequestToListGroups();
 	}
-	this.connectToServer = function(){
-		this.socket = new WebSocket(this.server);
-		this.socket.onopen = function(){
-			message1.name = localStorage.name;
-			message1.colorvalue.stroke = xoPalette.colors[localStorage.color].stroke;
-			message1.colorvalue.fill = xoPalette.colors[localStorage.color].fill;
-			me.socket.send(JSON.stringify(message1));
-			// me.setDispatch();
-		}
-		this.socket.onerror = function(){
-			alert("Please check your internet connection. You are disconnected from the collaboration server");
-			var sideElem = docById("sideElem");
-			sideElem.style.display = "none";
-		}
+	this.socket.onerror = function(){
+		alert("Please check your internet connection. You are disconnected from the collaboration server");
+		var sideElem = docById("sideElem");
+		sideElem.style.display = "none";
+	}
 
-		this.socket.onclose = function(){
-			var sideElem = docById("sideElem");
-			sideElem.style.display = "none";
-		}
-		this.socket.onmessage = function(evt){
-			var res = JSON.parse(evt.data);
+	this.socket.onclose = function(){
+		var sideElem = docById("sideElem");
+		sideElem.style.display = "none";
+	}
 
-			switch(res.type){
-				case msgListUsers :
-					me.collab.fillUsers(res);
-					// for(var i in res.data[0]){
-					// 	alert(i + " " + res.data[0][i]);
-					// }
-					break;
-				case msgCreateSharedActivity :
-					groupId = res.data;
-					shared = 1;
-					me.shared = true;
-					var groupDiv = docById('share');
-					groupDiv.innerHTML = "<h4><b>THIS ACTIVITY IS SHARED</b></h4>";
-					groupDiv.className = "button-shared";
-					// var syncEl = docById('syncElem');
-					// syncEl.style.display = "block";
-					// alert(groupDiv);
-					break;
-				case msgListSharedActivities :
-					// if(res.data.length > 0){
-					// 	for(var i in res.data[0]){
-					// 		if(i == "users"){
-					// 			alert(res.data[0][i][0]);	
-					// 		}
-							
-					// 	}
-					// }
-					// me.groupsRes = res;
-					me.collab.fillGroups(res);
-					// me.fillContentGroups(res);
-					break;
-				case msgJoinSharedActivity :
-					groupId = res.data.id;
-					var groupDiv = docById('groupMessage');
-					groupDiv.innerHTML = "<h4>Present Group : " + res.data.users[0] + "</h4>";
-					var syncEl = docById('syncElem');
-					syncEl.style.display = "block";
-					break;
-				case msgSendMessage :
-					if(res.data.user.networkId != ntId){
-						var user = res.data.user;
-						var tid = me.getTurtleList(user);
-						if(tid == null){
-							console.log("inside if");
-						}
-						else {
-							console.log("Inside else");
-							for(var i in tid){
-								var myBlock = tid[i].startBlock;
-								sendStackToTrash(me.blocks,myBlock);
-							}
-						}
-						var currentTurtles = turtles.turtleList;
-						var prelen = currentTurtles.length;
-						me.loadRawProject(res.data.content);
-						var peerTurtles = [];
-						setTimeout(function(){
-							var afterLoadTurtles = turtles.turtleList;
-							// var peerTurtles  = [];
-							var j = 0;
-							for(var i in afterLoadTurtles){
-								if(j < prelen){
-									j++;
-									continue;
-								}
-								else {
-									peerTurtles.push(afterLoadTurtles[i]);
-								}
-								j++;
-							}
-							for(var i in me.peers){
-								if(me.peers[i].user.networkId == res.data.user.networkId){
-									for(var j in peerTurtles){
-										me.peers[i].turtleList.push(peerTurtles[j]);
-									}
-								}
-								else {
-									var peerdata = { user : res.data.user, turtleList : []};
-									for(var j in peerTurtles){
-										peerdata.turtleList.push(peerTurtles[j]);
-									}
-									me.peers.push(peerdata);
-								}
-							}
-							for(var h in peerTurtles){
-								me.logo.runLogoCommands(me.blocks.blockList.indexOf(peerTurtles[h].startBlock));
-							}
-						},500); 
-					}
-					
-					
-					break;
-				case msgOnSharedActivityUserChanged :
-					var peerdata = { user : res.data.user, turtleList : []};
-					if(res.data.move == -1){
+	
 
+	this.socket.onmessage = function(evt){
+		var res = JSON.parse(evt.data);
+
+		switch(res.type){
+			case msgCreateSharedActivity :
+				groupId = res.data;
+				shared = 1;
+				me.shared = true;
+				var groupDiv = docById('groupDetail');
+				groupDiv.innerHTML = "<h4>Present Group : " + groupId + "</h4>";
+				var syncEl = docById('syncElem');
+				syncEl.style.display = "block";
+				// alert(groupDiv);
+				break;
+			case msgListSharedActivities :
+				// if(res.data.length > 0){
+				// 	for(var i in res.data[0]){
+				// 		if(i == "users"){
+				// 			alert(res.data[0][i][0]);	
+				// 		}
+						
+				// 	}
+				// }
+				
+				me.fillContentInShare(res);
+				break;
+			case msgJoinSharedActivity :
+				groupId = res.data.id;
+				var groupDiv = docById('groupDetail');
+				groupDiv.innerHTML = "<h4>Present Group : " + groupId + "</h4>";
+				var syncEl = docById('syncElem');
+				syncEl.style.display = "block";
+				break;
+			case msgSendMessage :
+				if(res.data.user.networkId != ntId){
+					var user = res.data.user;
+					var tid = me.getTurtleList(user);
+					if(tid == null){
+						console.log("inside if");
 					}
 					else {
-						me.peers.push(peerdata);
-
+						console.log("Inside else");
+						for(var i in tid){
+							var myBlock = tid[i].startBlock;
+							sendStackToTrash(me.blocks,myBlock);
+						}
 					}
-					
-					break;
-			}
+					var currentTurtles = turtles.turtleList;
+					var prelen = currentTurtles.length;
+					me.loadRawProject(res.data.content);
+					var peerTurtles = [];
+					setTimeout(function(){
+						var afterLoadTurtles = turtles.turtleList;
+						// var peerTurtles  = [];
+						var j = 0;
+						for(var i in afterLoadTurtles){
+							if(j < prelen){
+								j++;
+								continue;
+							}
+							else {
+								peerTurtles.push(afterLoadTurtles[i]);
+							}
+							j++;
+						}
+						for(var i in me.peers){
+							if(me.peers[i].user.networkId == res.data.user.networkId){
+								for(var j in peerTurtles){
+									me.peers[i].turtleList.push(peerTurtles[j]);
+								}
+							}
+							else {
+								var peerdata = { user : res.data.user, turtleList : []};
+								for(var j in peerTurtles){
+									peerdata.turtleList.push(peerTurtles[j]);
+								}
+								me.peers.push(peerdata);
+							}
+						}
+						for(var h in peerTurtles){
+							me.logo.runLogoCommands(me.blocks.blockList.indexOf(peerTurtles[h].startBlock));
+						}
+					},500); 
+				}
+				
+				
+				break;
+			case msgOnSharedActivityUserChanged :
+				var peerdata = { user : res.data.user, turtleList : []};
+				if(res.data.move == -1){
+
+				}
+				else {
+					me.peers.push(peerdata);
+				}
+				
+				break;
 		}
 	}
-
-	this.syncer = function(){
-		if(groupId != null){
-			me.sync();
-		}
-	}
-
-	this.setCollab = function(collab){
-		me.collab = collab;
-	}
-	
 
 	this.share = function(){
         var message2 = {type : msgCreateSharedActivity, activityId : "org.sugarlabs.TurtleBlocks"};
@@ -204,15 +160,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
         me.sendMessage(data);
         // me.sendMessage(turtles.turtleList[0].svgOutput);
   		// sendStackToTrash(me.blocks, me.blocks.blockList[0]);
-	}
-
-	this.fillContentUsers = function(res){
-		
-		
-	}
-
-	this.fillContentGroups = function(res){
-
 	}
 
 	this.fillContentInShare = function(res){
@@ -233,21 +180,8 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 		}
 	}
 
-	this.getUsersList = function(){
-		me.sendRequestToListUsers();
-	}
-
-	this.getGroupsList = function(){
-		// alert("getGroupsList called");
-		me.sendRequestToListGroups();
-	}
-
 	this.sendRequestToListGroups = function(){
 		me.socket.send(JSON.stringify({type : msgListSharedActivities}));
-	}
-
-	this.sendRequestToListUsers = function(){
-		me.socket.send(JSON.stringify({type : msgListUsers}));
 	}
 
 	this.groupClick = function(that){
@@ -282,8 +216,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.setLogo = function(logo){
 		me.logo = logo;
 	}
-
-	
 
 }
 

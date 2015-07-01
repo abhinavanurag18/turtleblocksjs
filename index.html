@@ -6,8 +6,9 @@
     <title>Turtle Blocks JS</title>
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height"/>
     <link rel="stylesheet" href="css/activity.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
     
     <link rel="stylesheet" type="text/css" href="css/side.css">
     <script src="lib/mespeak.js"></script>
@@ -16,6 +17,7 @@
     <script src="lib/jquery-1.10.1.js"></script>
     <script src="lib/webL10n.js"></script>
     <script src="js/shareElem.js"></script>
+    <script type="text/javascript" src="js/xocolor.js"></script>
     <!-- Latest compiled and minified JavaScript -->
     <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
     <link rel="prefetch" type="application/l10n" href="./localization.ini" />
@@ -111,24 +113,87 @@
     <div id="helpElem"></div>
     <div id="shareElem"></div>
     <button id="sideElem"></button>
-    <button id="syncElem"></button>
+    <!-- <button id="syncElem"></button> -->
     <div class="mask"></div>
     <div class="collabBox">
-      <div class="head-box">
-        <div class="row">
-          <div class="col-md-9" id="groupDetail">
-            <h4>Not Connected To Any Group</h4>
+      <div class="big-holder" id="settings">
+        <div class="header">
+          <div class="row">
+            <div class="col-md-1">
+              
+            </div>
+            <div class="col-md-3">
+              <div class="header-button active" id="shareHeader">
+                <h4>Share Activity</h4>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="header-button" id="listUsers">
+                <h4>Active Users</h4>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="header-button" id="listGroup">
+                <h4>Active Groups</h4>
+              </div>
+            </div>
+            <div class="col-md-1"></div>
           </div>
-          <div class="col-md-1">
-            <div class="btn btn-default" id="share">Share</div>
+          
+
+        </div>
+        <div class="sub-holder" id="share-holder">
+          <!-- <button class="btn-lg btn btn-success">Share</button> -->
+          <div class="icons" id="gfgi">
+          
+          </div>
+          <br />
+          <div class="hello" id="hello"></div>
+          <br />
+          <div class="button-share" id="share">
+            <h4>CLICK HERE TO SHARE THIS ACTIVITY</h4>
           </div>
         </div>
+        <div class="sub-holder" id="user-holder">
+        </div>
+        <div class="sub-holder" id="group-holder">
+          
+        </div>
+        <!-- <div class="head-box">
+          <div class="row">
+            <div class="col-md-9" id="groupDetail">
+              <h4>Not Connected To Any Group</h4>
+            </div>
+            <div class="col-md-1">
+              <div class="btn btn-default" id="share">Share</div>
+            </div>
+          </div>
+        </div>
+        <hr />
+        <h3><b>Available Groups</b></h3>  
+        <div id="groupList">
+          
+        </div> -->  
       </div>
-      <hr />
-      <h3><b>Available Groups</b></h3>  
-      <div id="groupList">
-        
-      </div>      
+      <div class="holder" id="name-holder">
+        <h4>Let Us Know Your Preferences</h4>
+        <input type="text" class="form-control" id="name" placeholder="name">
+      </div>
+      <div class="holder" id="color-chooser">
+        <h4 id="welcome"></h4>
+        <div class="icon" id="gfg">
+          
+        </div>
+      </div>
+      <div class="left-button">
+        <button class="btn btn-success btn-lg" id="lbtn">Go Back</button>
+      </div>
+      <div class="right-button">
+        <button class="btn btn-success btn-lg" id="rbtn">Next</button>
+      </div>
+      <div class="right-button">
+        <button class="btn btn-success btn-lg" id="submit">Submit</button>
+      </div>   
     </div>
 
 </body>

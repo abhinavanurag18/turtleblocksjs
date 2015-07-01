@@ -50,7 +50,8 @@ define(function(require) {
     require('activity/analytics');
     require('prefixfree.min');
     require('activity/presence');
-    require('jquery-1.10.1');
+    require('activity/collabBox');
+    // require('jquery-1.10.1');
     
 
     // Manipulate the DOM only when it is ready.
@@ -96,6 +97,7 @@ define(function(require) {
         var utilityBox;
         var thumbnails;
         var presence = null;
+        var collabBox = null;
         var buttonsVisible = true;
         var headerContainer = null;
         var toolbarButtonsVisible = true;
@@ -107,6 +109,7 @@ define(function(require) {
         var lastKeyCode = 0;
         var pasteContainer = null;
         var chartBitmap = null;
+        var xoPalette = null;
 
         // Calculate the palette colors.
         for (var p in PALETTECOLORS) {
@@ -228,6 +231,7 @@ define(function(require) {
         function doFastButton() {
             logo.setTurtleDelay(0);
             if (!turtles.running()) {
+                presence.syncer();
                 logo.runLogoCommands();
             } else {
                 logo.step();
@@ -406,18 +410,18 @@ define(function(require) {
             turtles = new Turtles(canvas, turtleContainer, refreshCanvas);
             blocks = new Blocks(canvas, blocksContainer, refreshCanvas, trashcan, stage.update);
             presence = new SugarPresence(loadRawProject,saveLocally, turtles, blocks);
+            collabBox = new CollaborationBox(presence);
             palettes = initPalettes(canvas, refreshCanvas, palettesContainer, cellSize, refreshCanvas, trashcan, blocks);
-
-            // var share = docById('share');
-            // share.onclick = function(){
-
-            //     presence.share();
-            // }
+            presence.testServer();
+            presence.setCollab(collabBox);
+            
             palettes.setBlocks(blocks);
             turtles.setBlocks(blocks);
             blocks.setTurtles(turtles);
             blocks.setErrorMsg(errorMsg);
             blocks.makeCopyPasteButtons(makeButton, updatePasteButton);
+
+
 
             // collabBox(presence);
 
@@ -429,6 +433,7 @@ define(function(require) {
                             getStageMouseDown, getCurrentKeyCode,
                             clearCurrentKeyCode, meSpeak, saveLocally);
             blocks.setLogo(logo);
+            presence.setLogo(logo);
 
             // Set the default background color...
             logo.setBackgroundColor(-1);
@@ -1754,19 +1759,13 @@ define(function(require) {
             });
         }
 
-        function sync(){
-            presence.sync();
-        }
-
-        function share(){
-            presence.share();
-        }
-
         var sideEl = docById('sideElem');
         sideEl.onclick = function(){
             // alert("It works here too.");
-            presence.sendRequestToListGroups();
+            // presence.sendRequestToListGroups();
+            collabBox.openCollab();
         }
+        // $()
 
         var share = docById('share');
         share.onclick = function(){
@@ -1776,6 +1775,8 @@ define(function(require) {
 
         var sync = docById('syncElem');
         sync.onclick = function(){
+            // alert("click working");
+            // console.log(turtles.turtleList[0].svgOutput);
             presence.sync();
         }
 

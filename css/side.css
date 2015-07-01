@@ -85,3 +85,197 @@ body {
 	height: 80%;
 	overflow-y: auto; 
 }
+
+.holder {
+	position: absolute;
+	top: 25%;
+	left: 25%;
+	width: 50%;
+	height: 50%;
+	/*border-radius: 10px;*/
+	/*border-style: solid;*/
+	/*border-color: #000;*/
+}
+
+.big-holder {
+	position: absolute;
+	top: 5%;
+	left: 5%;
+	width: 90%;
+	height: 80%;
+	/*border-radius: 10px;*/
+	/*border-style: solid;*/
+	/*border-color: #000;*/
+}
+
+#name-holder {
+	display : none;
+}
+
+#color-chooser {
+	display: none;
+}
+
+#settings {
+	display: none;
+}
+
+.icon {
+	position : relative;
+	width: 50%;
+	height : 75%;
+	left : 40%;
+	top : 15%; 
+	/*background-image: url("../icons/module-about_me.svg");*/
+	background-repeat: no-repeat;
+	background-size: 50% 50%;
+	background-position: left center;
+}
+.iconGroup {
+	position : relative;
+	/*width: 50%;*/
+	height : 120px;
+	/*left : 40%;*/
+	/*top : 15%; */
+	/*background-image: url("../icons/module-about_me.svg");*/
+	background-repeat: no-repeat;
+	background-size: 50% 50%;
+	background-position: center;
+	cursor: pointer;
+	border-radius: 10px;
+	color: #000;
+	-webkit-transition: background-color 0.5s, color 0.5s;
+}
+
+.iconGroup:hover {
+	background-color: #222;
+	color: #fff;
+}
+
+.icons {
+	position : relative;
+	width: 50%;
+	height : 60%;
+	left : 37%;
+	top : 5%; 
+	/*background-image: url("../icons/module-about_me.svg");*/
+	background-repeat: no-repeat;
+	background-size: 50% 50%;
+	background-position: left center;
+	/*background-color: #000;*/
+}
+
+.left-button {
+	position : absolute;
+	bottom : 5%;
+	left : 5%;
+}
+
+.right-button {
+	position : absolute;
+	bottom : 5%;
+	right : 5%;	
+}
+
+.header {
+	position: relative;
+	
+	width : 100%;
+	height : 20%;
+}
+
+.header-button {
+	position: relative;
+	height : 40px;
+	border-color : #fff;
+	border-radius : 5px;
+	border-style: solid;
+	border-width : 2px;
+	text-align: center;
+	cursor: pointer;
+	-webkit-transition : background-color 0.3s;
+	/*background-color : #fff; */
+}
+
+.active {
+	background-color: #fff;
+	color: #000;
+}
+
+.header-button:hover{
+	background-color: #fff;
+	color : #000;
+}
+
+.sub-holder {
+	position: relative;
+	width: 100%;
+	min-height : 150px;
+	height: 80%;
+	overflow-y: auto;
+	overflow-x: hidden; 
+	/*top: 20%;*/
+	/*left : 5%;*/
+}
+
+#share-holder {
+	display: block;
+}
+
+#user-holder {
+	display : none;
+}
+
+#group-holder {
+	display :none;
+}
+
+.hello {
+	position: relative;
+	width: 100%;
+	height: 7%;
+	text-align: center;
+}
+
+.button-share {
+	position: relative;
+	left: 25%;
+	width: 50%;
+	height: 15%;
+	text-align: center;
+	border-style: solid;
+	border-color: #fff;
+	border-radius: 5px;
+	border-width: 2px;
+	cursor: pointer;
+	-webkit-transition : background-color 0.3s;
+}
+
+.button-share:hover {
+	background-color: #fff;
+	color: #000;
+}
+
+.button-shared {
+	position: relative;
+	left: 25%;
+	width: 50%;
+	height: 15%;
+	text-align: center;
+	border-style: solid;
+	border-color: #fff;
+	border-radius: 5px;
+	border-width: 2px;
+}
+
+
+
+.userName {
+	position: absolute;
+	bottom : 1%;
+	left: 5%;
+	width: 90%;
+	/*height: 20%;*/
+	text-align: center;
+	/*display: none;*/
+}

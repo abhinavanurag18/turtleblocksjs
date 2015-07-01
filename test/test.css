@@ -1,0 +1,44 @@
+body {
+	height: 100%;
+}
+
+.holder {
+	position: fixed;
+	top: 25%;
+	left: 25%;
+	width: 50%;
+	height: 50%;
+	/*border-radius: 10px;*/
+	/*border-style: solid;*/
+	/*border-color: #000;*/
+}
+
+#name-holder {
+	display : none;
+}
+
+#color-chooser {
+	display: block;
+}
+
+.left-button {
+	position : fixed;
+	bottom : 5%;
+	left : 5%;
+}
+
+.right-button {
+	position : fixed;
+	bottom : 5%;
+	right : 5%;	
+}
+
+.icon {
+	position : relative;
+	width: 50%;
+	height : 50%;
+	left : 50%;
+	top : 50%; 
+	/*background-image: url("../icons/module-about_me.svg");*/
+	background-repeat: no-repeat;
+}
