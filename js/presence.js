@@ -32,7 +32,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.blocks = blocks;
 	this.logo = null;
 	this.shared = false;
-	this.server = "ws://localhost:8039";
+	this.server = "ws://server.sugarizer.org:8039";
 	this.socket = null;
 	this.testSocket = null;
 	this.collab = null;
