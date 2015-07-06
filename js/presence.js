@@ -20,6 +20,7 @@ var shared = 0;
 var xoPalette = xocolor;
 var colorizedColor = null;
 var ownerColor = 0;
+
 var icons = {directory:"icons",icon:"module-about_me.svg"};
 var iconColorCache = { names : [], values : []};
 
@@ -31,12 +32,14 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.blocks = blocks;
 	this.logo = null;
 	this.shared = false;
-	this.server = "ws://server.sugarizer.org:8039";
+	this.server = "ws://localhost:8039";
 	this.socket = null;
 	this.testSocket = null;
 	this.collab = null;
 	this.usersRes = null;
 	this.groupsRes = null;
+	this.connected_to = 0;
+	this.OnlineUsers = null;
 	var me = this;
 	this.testServer = function(){
 		this.testSocket = new WebSocket(this.server);
@@ -52,13 +55,18 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 			sideElem.style.display = "none";
 		}
 	}
-	this.connectToServer = function(){
+	this.connectToServer = function(callback){
 		this.socket = new WebSocket(this.server);
 		this.socket.onopen = function(){
-			message1.name = localStorage.name;
-			message1.colorvalue.stroke = xoPalette.colors[localStorage.color].stroke;
-			message1.colorvalue.fill = xoPalette.colors[localStorage.color].fill;
-			me.socket.send(JSON.stringify(message1));
+			var sideElem = docById("sideElem");
+			sideElem.style.display = "block";
+			if(callback){
+				callback();
+			}
+			// message1.name = localStorage.name;
+			// message1.colorvalue.stroke = xoPalette.colors[localStorage.color].stroke;
+			// message1.colorvalue.fill = xoPalette.colors[localStorage.color].fill;
+			// me.socket.send(JSON.stringify(message1));
 			// me.setDispatch();
 		}
 		this.socket.onerror = function(){
@@ -68,6 +76,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 		}
 
 		this.socket.onclose = function(){
+			alert("Disconnected");
 			var sideElem = docById("sideElem");
 			sideElem.style.display = "none";
 		}
@@ -76,41 +85,37 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 
 			switch(res.type){
 				case msgListUsers :
+					// console.log(res);
+					me.OnlineUsers = res.data;
 					me.collab.fillUsers(res);
-					// for(var i in res.data[0]){
-					// 	alert(i + " " + res.data[0][i]);
-					// }
 					break;
 				case msgCreateSharedActivity :
 					groupId = res.data;
 					shared = 1;
 					me.shared = true;
 					var groupDiv = docById('share');
+					me.connected_to = ntId;
+					var sideel = docById('sideElem');
+					sideel.style.backgroundColor = xocolor.colors[localStorage.color].fill;
+					// var gdiv = docById('groupMessage');
 					groupDiv.innerHTML = "<h4><b>THIS ACTIVITY IS SHARED</b></h4>";
 					groupDiv.className = "button-shared";
-					// var syncEl = docById('syncElem');
-					// syncEl.style.display = "block";
-					// alert(groupDiv);
+					// gdiv.innerHTML = "<h4>Present Group : " + ntId + "</h4>";
 					break;
 				case msgListSharedActivities :
-					// if(res.data.length > 0){
-					// 	for(var i in res.data[0]){
-					// 		if(i == "users"){
-					// 			alert(res.data[0][i][0]);	
-					// 		}
-							
-					// 	}
-					// }
-					// me.groupsRes = res;
 					me.collab.fillGroups(res);
-					// me.fillContentGroups(res);
 					break;
 				case msgJoinSharedActivity :
 					groupId = res.data.id;
 					var groupDiv = docById('groupMessage');
-					groupDiv.innerHTML = "<h4>Present Group : " + res.data.users[0] + "</h4>";
-					var syncEl = docById('syncElem');
-					syncEl.style.display = "block";
+					me.connected_to = res.data.users[0];
+					var user = me.getUser(res.data.users[0]);
+					groupDiv.innerHTML = "Present Group : " + user.name;
+					// var syncEl = docById('syncElem');
+					// syncEl.style.display = "block";
+					var sideElem = docById('sideElem');
+					sideElem.style.backgroundColor = res.data.colorvalue.fill;
+					sideElem.style.
 					break;
 				case msgSendMessage :
 					if(res.data.user.networkId != ntId){
@@ -132,7 +137,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 						var peerTurtles = [];
 						setTimeout(function(){
 							var afterLoadTurtles = turtles.turtleList;
-							// var peerTurtles  = [];
 							var j = 0;
 							for(var i in afterLoadTurtles){
 								if(j < prelen){
@@ -167,6 +171,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					
 					break;
 				case msgOnSharedActivityUserChanged :
+					me.getUsersList();
 					var peerdata = { user : res.data.user, turtleList : []};
 					if(res.data.move == -1){
 
@@ -179,6 +184,22 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					break;
 			}
 		}
+		
+	}
+
+	this.getUser = function(ntId){
+		for(var i in me.OnlineUsers){
+			if(me.OnlineUsers[i].networkId == ntId){
+				return me.OnlineUsers[i];
+			}
+		}
+	}
+
+	this.registerUser = function(){
+		message1.name = localStorage.name;
+		message1.colorvalue.stroke = xoPalette.colors[localStorage.color].stroke;
+		message1.colorvalue.fill = xoPalette.colors[localStorage.color].fill;
+		me.socket.send(JSON.stringify(message1));
 	}
 
 	this.syncer = function(){
@@ -202,8 +223,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
         var p = localStorage.currentProject;
         var data = localStorage['SESSION' + p];
         me.sendMessage(data);
-        // me.sendMessage(turtles.turtleList[0].svgOutput);
-  		// sendStackToTrash(me.blocks, me.blocks.blockList[0]);
 	}
 
 	this.fillContentUsers = function(res){
@@ -281,6 +300,99 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 
 	this.setLogo = function(logo){
 		me.logo = logo;
+	}
+
+	this.setDispatch = function(){
+		me.dispatch_methods = {
+			't': me.turtle_request,
+			'T': me.receive_turtle_dict,
+			'R': me.reskin_turtle,
+			'f': me.move_forward,
+			'a': me.move_in_arc,
+			'r': me.rotate_turtle,
+			'x': me.set_xy,
+			'W': me.draw_text,
+			'c': me.set_pen_color,
+			'g': me.set_pen_gray_level,
+			's': me.set_pen_shade,
+			'w': me.set_pen_width,
+			'p': me.set_pen_state,
+			'F': me.fill_polygon,
+			'P': me.draw_pixbuf,
+			'B': me.paste,
+			'S': me.speak
+		}
+			
+	}
+
+	this.turtle_request = function(){
+		// var name = me.turtles.turtleList.length;
+		// var turtle = new Turtle(name,me.turtles);
+		me.turtles.add();
+	}
+
+	this.receive_turtle_dict = function(){
+
+	}
+
+	this.reskin_turtle = function(){
+
+	}
+
+	this.move_forward = function(){
+
+	}
+
+	this.move_in_arc = function(){
+
+	}
+
+	this.rotate_turtle = function(){
+
+	}
+
+	this.set_xy = function(){
+
+	}
+
+	this.draw_text = function(){
+
+	}
+
+	this.set_pen_color = function(){
+
+	}
+
+	this.set_pen_gray_level = function(){
+
+	}
+
+	this.set_pen_shade = function(){
+
+	}
+
+	this.set_pen_width = function(){
+
+	}
+
+	this.set_pen_state = function(){
+
+	}
+
+	this.fill_polygon = function(){
+
+	}
+
+	this.draw_pixbuf = function(){
+
+	}
+
+	this.paste = function(){
+
+	}
+
+	this.speak = function(){
+
 	}
 
 	

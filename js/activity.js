@@ -412,8 +412,15 @@ define(function(require) {
             presence = new SugarPresence(loadRawProject,saveLocally, turtles, blocks);
             collabBox = new CollaborationBox(presence);
             palettes = initPalettes(canvas, refreshCanvas, palettesContainer, cellSize, refreshCanvas, trashcan, blocks);
-            presence.testServer();
+            // presence.testServer();
             presence.setCollab(collabBox);
+            if(!(localStorage.name == undefined || localStorage.color == undefined)){
+                presence.connectToServer(presence.registerUser);
+            }
+            else {
+                presence.connectToServer(null);
+            }
+            
             
             palettes.setBlocks(blocks);
             turtles.setBlocks(blocks);

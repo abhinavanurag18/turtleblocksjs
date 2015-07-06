@@ -40,7 +40,7 @@ function CollaborationBox(presence){
 				lbtn.style.display = "none";
 				rbtn.style.display = "none";
 				submit.style.display = "none";
-				presence.connectToServer();
+				// presence.connectToServer();
 				setTimeout(function(){me.activateSettings(settings);},1000);
 				break;
 		}
@@ -88,8 +88,10 @@ function CollaborationBox(presence){
 			lbtn.style.display = "none";
 			rbtn.style.display = "none";
 			submit.style.display = "none";
-			presence.connectToServer();
-			setTimeout(function(){me.activateSettings(settings);},500);
+			// presence.connectToServer();
+			presence.registerUser();
+			// setTimeout(function(){me.activateSettings(settings);},500);
+			me.activateSettings(settings);
 		}
 		
 	}
@@ -138,6 +140,7 @@ function CollaborationBox(presence){
 			shareHolder.style.display = "none";
 			userHolder.style.display = "none";
 			groupHolder.style.display = "block";
+			me.presence.getUsersList();
 			me.presence.getGroupsList();
 		}
 
@@ -210,7 +213,15 @@ function CollaborationBox(presence){
 
 	this.fillGroups = function(res){
 		// alert("fill groups called");
-		var part0 = '<center><div id="groupMessage">You are not a member of any group.</div></center>';
+		var part0 = "";
+
+		if(!me.presence.connected_to){
+			part0 = '<center><div id="groupMessage">You are not a member of any group.</div></center>';
+		}
+		else {
+			var user = me.presence.getUser(ntId);
+			part0 = '<center><div id="groupMessage">Present Group Admin : '+ user.name  +'.</div></center>';
+		} 
 		var part1 = '<div class="row">';
 		var part2 = '<div class="col-md-3">';
 		var part3 = '<div class="iconGroup" id="g';
@@ -241,7 +252,8 @@ function CollaborationBox(presence){
 			for(var i = 1; i <= len; i++){
 
 				var username = document.getElementById("group"+i);
-				username.innerHTML = "<b>"+res.data[i-1].users[0]+"</b>";
+				var user = me.presence.getUser(res.data[i-1].users[0]);
+				username.innerHTML = "<b>"+user.name+"</b>";
 				me.render("g"+i,res.data[i-1].colorvalue);
 				var temp = document.getElementById("g"+i);
 				temp.setAttribute("data11",res.data[i-1].id);
