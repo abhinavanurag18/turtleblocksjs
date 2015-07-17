@@ -128,7 +128,19 @@ function CollaborationBox(presence){
 			shareHolder.style.display = "none";
 			userHolder.style.display = "block";
 			groupHolder.style.display = "none";
-			me.presence.getUsersList();
+			// me.presence.getUsersList();
+			// me.presence.getGroupsList();
+			// if(!me.presence.connected_to){
+			// 	var userholder = docById('user-holder');
+			// 	userHolder.innerHTML = "<h3> Oops !! There are no active users. :( </h3>";
+			// }
+			// else {
+				//get users list
+				//get group list
+				//list all the users in the joined group
+				me.presence.getUsersList();
+				// me.presence.getGroupsList();
+			// }
 		}
 
 		listGroup.onclick = function(){
@@ -151,7 +163,7 @@ function CollaborationBox(presence){
 		document.getElementById('hello').innerHTML = "<h3>Hello <b>" + localStorage.name + "</b></h3>";
 	}
 
-	this.fillUsers = function(res){
+	this.fillUsers = function(res,groupId){
 		// var userholder = document.getElementById("user-holder");
 		// userholder.innerHTML = "";
 		// for(var i = 1; i < 11; i++){

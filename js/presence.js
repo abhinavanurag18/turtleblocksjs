@@ -32,7 +32,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.blocks = blocks;
 	this.logo = null;
 	this.shared = false;
-	this.server = "ws://server.sugarizer.org:8039";
+	this.server = "ws://localhost:8039";
 	this.socket = null;
 	this.testSocket = null;
 	this.collab = null;
@@ -40,24 +40,25 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.groupsRes = null;
 	this.connected_to = 0;
 	this.OnlineUsers = null;
+	this.activeGroups = null;
 	var me = this;
 	this.testServer = function(){
-		this.testSocket = new WebSocket(this.server);
-		this.testSocket.onopen = function(){
+		me.testSocket = new WebSocket(me.server);
+		me.testSocket.onopen = function(){
 			var sideElem = docById("sideElem");
 			sideElem.style.display = "block";
 			this.close();
 		}
 
-		this.testSocket.onerror = function(){
+		me.testSocket.onerror = function(){
 			alert("Please check your internet connection. You are disconnected from the collaboration server");
 			var sideElem = docById("sideElem");
 			sideElem.style.display = "none";
 		}
 	}
 	this.connectToServer = function(callback){
-		this.socket = new WebSocket(this.server);
-		this.socket.onopen = function(){
+		me.socket = new WebSocket(me.server);
+		me.socket.onopen = function(){
 			var sideElem = docById("sideElem");
 			sideElem.style.display = "block";
 			if(callback){
@@ -69,25 +70,25 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 			// me.socket.send(JSON.stringify(message1));
 			// me.setDispatch();
 		}
-		this.socket.onerror = function(){
+		me.socket.onerror = function(){
 			alert("Please check your internet connection. You are disconnected from the collaboration server");
 			var sideElem = docById("sideElem");
 			sideElem.style.display = "none";
 		}
 
-		this.socket.onclose = function(){
+		me.socket.onclose = function(){
 			alert("Disconnected");
 			var sideElem = docById("sideElem");
 			sideElem.style.display = "none";
 		}
-		this.socket.onmessage = function(evt){
+		me.socket.onmessage = function(evt){
 			var res = JSON.parse(evt.data);
 
 			switch(res.type){
 				case msgListUsers :
 					// console.log(res);
 					me.OnlineUsers = res.data;
-					me.collab.fillUsers(res);
+					me.collab.fillUsers(res,groupId);
 					break;
 				case msgCreateSharedActivity :
 					groupId = res.data;
@@ -103,6 +104,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					// gdiv.innerHTML = "<h4>Present Group : " + ntId + "</h4>";
 					break;
 				case msgListSharedActivities :
+					me.activeGroups = res.data;
 					me.collab.fillGroups(res);
 					break;
 				case msgJoinSharedActivity :
@@ -115,7 +117,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					// syncEl.style.display = "block";
 					var sideElem = docById('sideElem');
 					sideElem.style.backgroundColor = res.data.colorvalue.fill;
-					sideElem.style.
+					
 					break;
 				case msgSendMessage :
 					if(res.data.user.networkId != ntId){
@@ -134,6 +136,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 						var currentTurtles = turtles.turtleList;
 						var prelen = currentTurtles.length;
 						me.loadRawProject(res.data.content);
+						console.log("Its loaded");
 						var peerTurtles = [];
 						setTimeout(function(){
 							var afterLoadTurtles = turtles.turtleList;
@@ -164,6 +167,8 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 							}
 							for(var h in peerTurtles){
 								me.logo.runLogoCommands(me.blocks.blockList.indexOf(peerTurtles[h].startBlock));
+								sendStackToTrashCollab(me.blocks,peerTurtles[h].startBlock);
+
 							}
 						},500); 
 					}
@@ -185,6 +190,14 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 			}
 		}
 		
+	}
+
+	this.getUsersGroup = function(gid){
+		for(var i in me.activeGroups){
+			if(me.activeGroups[i].id == gid){
+				return me.activeGroups[i].users;
+			}
+		}
 	}
 
 	this.getUser = function(ntId){
@@ -302,101 +315,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 		me.logo = logo;
 	}
 
-	this.setDispatch = function(){
-		me.dispatch_methods = {
-			't': me.turtle_request,
-			'T': me.receive_turtle_dict,
-			'R': me.reskin_turtle,
-			'f': me.move_forward,
-			'a': me.move_in_arc,
-			'r': me.rotate_turtle,
-			'x': me.set_xy,
-			'W': me.draw_text,
-			'c': me.set_pen_color,
-			'g': me.set_pen_gray_level,
-			's': me.set_pen_shade,
-			'w': me.set_pen_width,
-			'p': me.set_pen_state,
-			'F': me.fill_polygon,
-			'P': me.draw_pixbuf,
-			'B': me.paste,
-			'S': me.speak
-		}
-			
-	}
-
-	this.turtle_request = function(){
-		// var name = me.turtles.turtleList.length;
-		// var turtle = new Turtle(name,me.turtles);
-		me.turtles.add();
-	}
-
-	this.receive_turtle_dict = function(){
-
-	}
-
-	this.reskin_turtle = function(){
-
-	}
-
-	this.move_forward = function(){
-
-	}
-
-	this.move_in_arc = function(){
-
-	}
-
-	this.rotate_turtle = function(){
-
-	}
-
-	this.set_xy = function(){
-
-	}
-
-	this.draw_text = function(){
-
-	}
-
-	this.set_pen_color = function(){
-
-	}
-
-	this.set_pen_gray_level = function(){
-
-	}
-
-	this.set_pen_shade = function(){
-
-	}
-
-	this.set_pen_width = function(){
-
-	}
-
-	this.set_pen_state = function(){
-
-	}
-
-	this.fill_polygon = function(){
-
-	}
-
-	this.draw_pixbuf = function(){
-
-	}
-
-	this.paste = function(){
-
-	}
-
-	this.speak = function(){
-
-	}
-
-	
-
 }
 
 function sendStackToTrash(blocks, myBlock) {
@@ -423,6 +341,86 @@ function sendStackToTrash(blocks, myBlock) {
             console.log('null turtle');
         }
     }
+
+    if (myBlock.name == 'action') {
+        var actionArg = blocks.blockList[myBlock.connections[1]];
+        if (actionArg) {
+            var actionName = actionArg.value;
+            for (var blockId = 0; blockId < blocks.blockList.length; blockId++) {
+                var myBlock = blocks.blockList[blockId];
+                var blkParent = blocks.blockList[myBlock.connections[0]];
+                if (blkParent == null) {
+                    continue;
+                }
+                if (['nameddo', 'do', 'action'].indexOf(blkParent.name) != -1) {
+                    continue;
+                }
+                var blockValue = myBlock.value;
+                if (blockValue == _('action')) {
+                    continue;
+                }
+                if (blockValue == actionName) {
+                    blkParent.hide();
+                    myBlock.hide();
+                    myBlock.trash = true;
+                    blkParent.trash = true;
+                }
+            }
+
+            var blockPalette = blocks.palettes.dict['actions'];
+            var blockRemoved = false;
+            for (var blockId = 0; blockId < blockPalette.protoList.length; blockId++) {
+                var block = blockPalette.protoList[blockId];
+                // if (block.name == 'do' && block.defaults[0] != _('action') && block.defaults[0] == actionName) {
+                if (block.name == 'nameddo' && block.privateData != _('action')) {
+                    blockPalette.protoList.splice(blockPalette.protoList.indexOf(block), 1);
+                    delete blocks.protoBlockDict['myDo_' + actionName];
+                    blockPalette.y = 0;
+                    blockRemoved = true;
+                }
+            }
+            // Force an update if a block was removed.
+            if (blockRemoved) {
+                regeneratePalette(blockPalette);
+            }
+        }
+    }
+
+    // put drag group in trash
+    blocks.findDragGroup(thisBlock);
+    for (var b = 0; b < blocks.dragGroup.length; b++) {
+        var blk = blocks.dragGroup[b];
+        console.log('putting ' + blocks.blockList[blk].name + ' in the trash');
+        blocks.blockList[blk].trash = true;
+        blocks.blockList[blk].hide();
+        blocks.refreshCanvas();
+    }
+}
+
+function sendStackToTrashCollab(blocks, myBlock) {
+    var thisBlock = blocks.blockList.indexOf(myBlock);
+    // disconnect block
+    var b = myBlock.connections[0];
+    if (b != null) {
+        for (var c in blocks.blockList[b].connections) {
+            if (blocks.blockList[b].connections[c] == thisBlock) {
+                blocks.blockList[b].connections[c] = null;
+                break;
+            }
+        }
+        myBlock.connections[0] = null;
+    }
+
+    // if (myBlock.name == 'start') {
+    //     turtle = myBlock.value;
+    //     if (turtle != null) {
+    //         console.log('putting turtle ' + turtle + ' in the trash');
+    //         blocks.turtles.turtleList[turtle].trash = true;
+    //         blocks.turtles.turtleList[turtle].container.visible = false;
+    //     } else {
+    //         console.log('null turtle');
+    //     }
+    // }
 
     if (myBlock.name == 'action') {
         var actionArg = blocks.blockList[myBlock.connections[1]];

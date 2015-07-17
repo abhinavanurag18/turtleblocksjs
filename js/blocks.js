@@ -2409,6 +2409,8 @@ function Blocks(canvas, stage, refreshCanvas, trashcan, updateStage) {
         this.refreshCanvas;
     }
 
+    
+
     blockBlocks = this;
     return this;
 }

@@ -23,7 +23,7 @@ var turtleBasePath = 'images/';
 function Turtle (name, turtles) {
     this.name = name;
     this.turtles = turtles;
-
+    this.peername = '';
     // Is the turtle running?
     this.running = false;
 
@@ -831,6 +831,7 @@ function Turtles(canvas, stage, refreshCanvas) {
 
         myTurtle.container.on('click', function(event) {
             // If turtles listen for clicks then they can be used as buttons.
+            alert("it works");
             turtles.stage.dispatchEvent('click' + myTurtle.name);
         });
 

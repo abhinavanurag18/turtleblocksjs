@@ -1107,6 +1107,7 @@ define(function(require) {
             document.body.style.cursor = 'default';
         }
 
+
         function saveProject(projectName) {
             // palettes.updatePalettes();
             // Show busy cursor.
