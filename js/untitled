@@ -1,0 +1,532 @@
+this.makeNewBlockWithConnectionsCollab = function(name, blockOffset, connections, postProcess, postProcessArg, collapsed) {
+        if (typeof(collapsed) === 'undefined') {
+            collapsed = false
+        }
+        myBlock = this.makeNewBlock(name, postProcess, postProcessArg);
+        if (myBlock == null) {
+            console.log('could not make block ' + name);
+            return;
+        }
+
+        // myBlock.collapsed = !collapsed;
+        for (var c = 0; c < connections.length; c++) {
+            if (c == myBlock.docks.length) {
+                break;
+            }
+            if (connections[c] == null) {
+                myBlock.connections.push(null);
+            } else {
+                myBlock.connections.push(connections[c] + blockOffset);
+            }
+        }
+}
+
+this.makeNewBlockCollab = function(name, postProcess, postProcessArg) {
+    // Create a new block
+    if (!name in this.protoBlockDict) {
+        // Should never happen: nop blocks should be substituted
+        console.log('makeNewBlock: no prototype for ' + name);
+        return null;
+    }
+    if (this.protoBlockDict[name] == null) {
+        // Should never happen
+        console.log('makeNewBlock: no prototype for ' + name);
+        return null;
+    }
+    if (name == 'namedbox' || name == 'nameddo') {
+        this.blockList.push(new Block(this.protoBlockDict[name], this, postProcessArg[1]));
+    } else {
+        
+        this.blockList.push(new Block(this.protoBlockDict[name], this));
+    }
+    if (last(this.blockList) == null) {
+        // Should never happen
+        console.log('failed to make protoblock for ' + name);
+        return null;
+    }
+
+    // We copy the dock because expandable blocks modify it.
+    var myBlock = last(this.blockList);
+    myBlock.copySize();
+
+    // We may need to do some postProcessing to the block
+    myBlock.postProcess = postProcess;
+    myBlock.postProcessArg = postProcessArg;
+
+    // We need a container for the block graphics.
+    myBlock.container = new createjs.Container();
+    this.stage.addChild(myBlock.container);
+    myBlock.container.snapToPixelEnabled = true;
+    myBlock.container.x = myBlock.x;
+    myBlock.container.y = myBlock.y;
+
+    // and we need to load the images into the container.
+    myBlock.imageLoad();
+    return myBlock;
+}
+
+this.loadNewBlocksCollab = function(blockObjs) {
+        // Check for blocks connected to themselves,
+        // and for action blocks not connected to text blocks.
+        for (var b = 0; b < blockObjs.length; b++) {
+            var blkData = blockObjs[b];
+            for (var c in blkData[4]) {
+                if (blkData[4][c] == blkData[0]) {
+                    console.log('Circular connection in block data: ' + blkData);
+                    console.log('Punting loading of new blocks!');
+                    console.log(blockObjs);
+                    return;
+                }
+            }
+        }
+
+        // We'll need a list of existing storein and action names.
+        var currentActionNames = [];
+        var currentStoreinNames = [];
+        for (var b = 0; b < this.blockList.length; b++) {
+            if (this.blockList[b].name == 'action') {
+                if (this.blockList[b].connections[1] != null) {
+                    currentActionNames.push(this.blockList[this.blockList[b].connections[1]].value);
+                }
+            } else if (this.blockList[b].name == 'storein') {
+                if (this.blockList[b].connections[1] != null) {
+                    currentStoreinNames.push(this.blockList[this.blockList[b].connections[1]].value);
+                }
+            }
+        }
+
+        // We need to track two-arg blocks incase they need expanding. 
+        this.checkTwoArgBlocks = [];
+
+        // Don't make duplicate action names.
+        // Add a palette entry for any new storein blocks.
+        var stringNames = [];
+        var stringValues = {}; // label: [blocks with that label]
+        var actionNames = {}; // action block: label block
+        var storeinNames = {}; // storein block: label block
+        var doNames = {}; // do block: label block, nameddo block value
+
+        // action and start blocks that need to be collapsed.
+        this.blocksToCollapse = [];
+
+        // Scan for any new action and storein blocks to identify
+        // duplicates. We also need to track start and action blocks
+        // that may need to be collapsed.
+        for (var b = 0; b < blockObjs.length; b++) {
+            var blkData = blockObjs[b];
+            // blkData[1] could be a string or an object.
+            if (typeof(blkData[1]) == 'string') {
+                var name = blkData[1];
+            } else {
+                var name = blkData[1][0];
+            }
+
+            if (!(name in this.protoBlockDict)) {
+                continue;
+            }
+            if (['arg', 'twoarg'].indexOf(this.protoBlockDict[name].style) != -1) {
+                if (this.protoBlockDict[name].expandable) {
+                    this.checkTwoArgBlocks.push(this.blockList.length + b);
+                }
+            }
+
+            switch (name) {
+                case 'text':
+                    var key = blkData[1][1];
+                    if (stringValues[key] == undefined) {
+                        stringValues[key] = [];
+                    }
+                    stringValues[key].push(b);
+                    break;
+                case 'action':
+                case 'hat':
+                    if (blkData[4][1] != null) {
+                        actionNames[b] = blkData[4][1];
+                    }
+                    break;
+                case 'storein':
+                    if (blkData[4][1] != null) {
+                        storeinNames[b] = blkData[4][1];
+                    }
+                    break;
+                case 'nameddo': 
+                    doNames[b] = blkData[1][1]['value'];
+                    break;
+                case 'do':
+                case 'stack':
+                    if (blkData[4][1] != null) {
+                        doNames[b] = blkData[4][1];
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            switch (name) {
+                case 'action':
+                case 'start':
+                    if (typeof(blkData[1]) == 'object' && blkData[1].length > 1 && typeof(blkData[1][1]) == 'object' && 'collapsed' in blkData[1][1]) {
+                        if (blkData[1][1]['collapsed']) {
+                            this.blocksToCollapse.push(this.blockList.length + b);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        var updatePalettes = false;
+        // Make sure new storein names have palette entries.
+        for (var b in storeinNames) {
+            var blkData = blockObjs[storeinNames[b]];
+            if (currentStoreinNames.indexOf(blkData[1][1]) == -1) {
+                if (typeof(blkData[1][1]) == 'string') {
+                    var name = blkData[1][1];
+                } else {
+                    var name = blkData[1][1]['value'];
+                }
+                // console.log('Adding new palette entries for store-in ' + name);
+                this.newStoreinBlock(name);
+                this.newNamedboxBlock(name);
+                updatePalettes = true;
+            }
+        }
+
+        // Make sure action names are unique.
+        for (var b in actionNames) {
+            // Is there a proto do block with this name? If so, find a
+            // new name.
+            // Name = the value of the connected label.
+            var blkData = blockObjs[actionNames[b]];
+            if (typeof(blkData[1][1]) == 'string') {
+                var name = blkData[1][1];
+            } else {
+                var name = blkData[1][1]['value'];
+            }
+            var oldName = name;
+            var i = 1;
+            while (currentActionNames.indexOf(name) != -1) {
+                name = oldName + i.toString();
+                i += 1;
+                // Should never happen... but just in case.
+                if (i > this.blockList.length) {
+                    console.log('Could not generate unique action name.');
+                    break;
+                }
+            }
+
+            if (oldName != name) {
+                // Change the name of the action...
+                console.log('action ' + oldName + ' is being renamed ' + name);
+                blkData[1][1] = {'value': name};
+            }
+
+            // add a new nameddo block to the palette...
+            this.newNameddoBlock(name);
+            updatePalettes = true;
+            // and any do blocks
+            for (var d in doNames) {
+                var thisBlkData = blockObjs[d];
+                if (typeof(thisBlkData[1]) == 'string') {
+                    var blkName = thisBlkData[1];
+                } else {
+                    var blkName = thisBlkData[1][0];
+                }
+                if (blkName == 'nameddo') {
+                    if (thisBlkData[1][1]['value'] == oldName) {
+                        // console.log('renaming ' + oldName + ' to ' + name);
+                        thisBlkData[1][1] = {'value': name};
+                    }
+                } else {
+                    var doBlkData = blockObjs[doNames[d]];
+                    if (typeof(doBlkData[1][1]) == 'string') {
+                        if (doBlkData[1][1] == oldName) {
+                            // console.log('renaming ' + oldName + ' to ' + name);
+                            doBlkData[1][1] = name;
+                        }
+                    } else {
+                        if (doBlkData[1][1]['value'] == oldName) {
+                            // console.log('renaming ' + oldName + ' to ' + name);
+                            doBlkData[1][1] = {'value': name};
+                        }
+                    }
+                }
+            }
+        }
+
+        if (updatePalettes) {
+            this.palettes.updatePalettes();
+        }
+
+        // Append to the current set of blocks.
+        this.adjustTheseDocks = [];
+        this.loadCounter = blockObjs.length;
+        // We add new blocks to the end of the block list.
+        var blockOffset = this.blockList.length;
+
+        console.log(this.loadCounter + ' blocks to load');
+        for (var b = 0; b < this.loadCounter; b++) {
+            var thisBlock = blockOffset + b;
+            var blkData = blockObjs[b];
+
+            if (typeof(blkData[1]) == 'object') {
+                if (blkData[1].length == 1) {
+                    blkInfo = [blkData[1][0], {'value': null}];
+                } else if (['number', 'string'].indexOf(typeof(blkData[1][1])) != -1) {
+                    blkInfo = [blkData[1][0], {'value': blkData[1][1]}];
+                    if (['start', 'action', 'hat'].indexOf(blkData[1][0]) != -1) {
+                        blkInfo[1]['collapsed'] = false;
+                    }
+                } else {
+                    blkInfo = blkData[1];
+                }
+            } else {
+                blkInfo = [blkData[1], {'value': null}];
+                if (['start', 'action', 'hat'].indexOf(blkData[1]) != -1) {
+                    blkInfo[1]['collapsed'] = false;
+                }
+            }
+
+            var name = blkInfo[0];
+
+            var collapsed = false;
+            if (['start', 'action'].indexOf(name) != -1) {
+                collapsed = blkInfo[1]['collapsed'];
+            }
+
+            if (blkInfo[1] == null) {
+                var value = null;
+            } else {
+                var value = blkInfo[1]['value'];
+            }
+
+            if (name in NAMEDICT) {
+                name = NAMEDICT[name];
+            }
+
+            var me = this;
+            // A few special cases.
+            switch (name) {
+                // Only add 'collapsed' arg to start, action blocks.
+                case 'start':
+                    blkData[4][0] = null;
+                    blkData[4][2] = null;
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var blkInfo = args[1];
+                        me.blockList[thisBlock].value = me.turtles.turtleList.length;
+                        me.turtles.add(me.blockList[thisBlock], blkInfo);
+                    }
+                    this.makeNewBlockWithConnections('start', blockOffset, blkData[4], postProcess, [thisBlock, blkInfo[1]], collapsed);
+                    break;
+                case 'action':
+                case 'hat':
+                    blkData[4][0] = null;
+                    blkData[4][3] = null;
+                    this.makeNewBlockWithConnections('action', blockOffset, blkData[4], null, null, collapsed);
+                    break;
+
+                    // Named boxes and dos need private data.
+                case 'namedbox':
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].privateData = value;
+                        me.blockList[thisBlock].value = null;
+                    }
+                    this.makeNewBlockWithConnections('namedbox', blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+                case 'nameddo':
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].privateData = value;
+                        me.blockList[thisBlock].value = null;
+                    }
+                    this.makeNewBlockWithConnections('nameddo', blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+
+                    // Value blocks need a default value set.
+                case 'number':
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].value = Number(value);
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+                case 'text':
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].value = value;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+                case 'media':
+                    // Load a thumbnail into a media blocks.
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].value = value;
+                        if (value != null) {
+                            // Load artwork onto media block.
+                            me.blockList[thisBlock].loadThumbnail(null);
+                        }
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+                case 'camera':
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].value = CAMERAVALUE;
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+                case 'video':
+                    postProcess = function(args) {
+                        var thisBlock = args[0];
+                        var value = args[1];
+                        me.blockList[thisBlock].value = VIDEOVALUE;
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+
+                    // Define some constants for legacy blocks for
+                    // backward compatibility with Python projects.
+                case 'red':
+                case 'black':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = 0;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'white':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = 100;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'orange':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = 10;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'yellow':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = 20;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'green':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = 40;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'blue':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = 70;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'leftpos':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = -(canvas.width / 2);
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'rightpos':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = (canvas.width / 2);
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'toppos':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = (canvas.height / 2);
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'botpos':
+                case 'bottompos':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = -(canvas.height / 2);
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'width':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = canvas.width;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'height':
+                    postProcess = function(thisBlock) {
+                        me.blockList[thisBlock].value = canvas.height;
+                        me.updateBlockText(thisBlock);
+                    }
+                    this.makeNewBlockWithConnections('number', blockOffset, blkData[4], postProcess, thisBlock);
+                    break;
+                case 'loadFile':
+                    postProcess = function(args) {
+                        me.blockList[args[0]].value = args[1];
+                        me.updateBlockText(args[0]);
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], postProcess, [thisBlock, value]);
+                    break;
+                default:
+                    // Check that name is in the proto list
+                    if (!name in this.protoBlockDict || this.protoBlockDict[name] == null) {
+                        // Lots of assumptions here.
+                        // TODO: figure out if it is a flow or an arg block.
+                        // Substitute a NOP block for an unknown block.
+                        n = blkData[4].length;
+                        console.log(n + ': substituting nop block for ' + name);
+                        switch (n) {
+                            case 1:
+                                name = 'nopValueBlock';
+                                break;
+                            case 2:
+                                name = 'nopZeroArgBlock';
+                                break;
+                            case 3:
+                                name = 'nopOneArgBlock';
+                                break;
+                            case 4:
+                                name = 'nopTwoArgBlock';
+                                break;
+                            case 5:
+                            default:
+                                name = 'nopThreeArgBlock';
+                                break;
+                        }
+                    }
+                    this.makeNewBlockWithConnections(name, blockOffset, blkData[4], null);
+                    break;
+            }
+            if (thisBlock == this.blockList.length - 1) {
+                if (this.blockList[thisBlock].connections[0] == null) {
+                    this.blockList[thisBlock].x = blkData[2];
+                    this.blockList[thisBlock].y = blkData[3];
+                    this.adjustTheseDocks.push(thisBlock);
+                }
+            }
+        }
+    }

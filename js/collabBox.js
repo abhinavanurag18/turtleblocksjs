@@ -7,6 +7,9 @@ var iconColorCache = { names : [], values : []};
 function CollaborationBox(presence){
 
 	this.presence = presence;
+	this.groupList = null;
+	this.userList = null;
+	this.groupId = null;
 	var me = this;
 	this.openCollab = function(){
 		var state = 1;
@@ -138,9 +141,23 @@ function CollaborationBox(presence){
 				//get users list
 				//get group list
 				//list all the users in the joined group
+				// alert("fd");
 				me.presence.getUsersList();
-				// me.presence.getGroupsList();
+				me.presence.getGroupsList();
+				setTimeout(function(){
+					var ntid = me.presence.connected_to;
+					// alert(ntid);
+					for(var i in me.groupList.data){
+						if(me.groupList.data[i].id = me.groupId){
+							// alert("found");
+							me.fillUsers(me.groupList.data[i].users);
+						}
+					}
+				},500);
 			// }
+			// me.presence.getCollabUsers();
+			// me.presence.getCollab
+
 		}
 
 		listGroup.onclick = function(){
@@ -163,35 +180,9 @@ function CollaborationBox(presence){
 		document.getElementById('hello').innerHTML = "<h3>Hello <b>" + localStorage.name + "</b></h3>";
 	}
 
-	this.fillUsers = function(res,groupId){
-		// var userholder = document.getElementById("user-holder");
-		// userholder.innerHTML = "";
-		// for(var i = 1; i < 11; i++){
-			// me.render(i.toString());
-			// var username = document.getElementById("user"+i);
-			// username.innerHTML = "<b>"+localStorage.name+"</b>";
-			// document.getElementById(i.toString()).onmouseover = function(){
-			// 	// if(document.getElementById("user"+this.getAttribute('id')).style.display == "block"){
-			// 		// document.getElementById("user"+this.getAttribute('id')).style.display = "none";
-			// 	// }
-			// 	// else {
-			// 		document.getElementById("user"+this.getAttribute('id')).style.display = "block";
-			// 	// }
-				
-			// }
 
-			// document.getElementById(i.toString()).onmouseout = function(){
-			// 	// if(document.getElementById("user"+this.getAttribute('id')).style.display == "block"){
-			// 		// document.getElementById("user"+this.getAttribute('id')).style.display = "none";
-			// 	// }
-			// 	// else {
-			// 		document.getElementById("user"+this.getAttribute('id')).style.display = "none";
-			// 	// }
-				
-			// }
-
-		// }
-
+	this.fillUsers = function(res){
+		// alert("fill users");
 		var part1 = '<div class="row">';
 		var part2 = '<div class="col-md-3">';
 		var part3 = '<div class="iconGroup" id="';
@@ -199,7 +190,8 @@ function CollaborationBox(presence){
 		var part5 = '"></div></div>';
 		var end = '</div>';
 		
-		var len = res.data.length;
+		var len = res.length;
+		// alert(len);
 		var userHolder = docById('user-holder');
 		if(len == 0){
 			userHolder.innerHTML = "<h3> Oops !! There are no active users. :( </h3>";
@@ -216,9 +208,10 @@ function CollaborationBox(presence){
 				}
 			}
 			for(var i = 1; i <= len; i++){
-				me.render(i.toString(),res.data[i-1].colorvalue);
+				var user = me.presence.getUser(res[i-1]);
+				me.render(i.toString(),user.colorvalue);
 				var username = document.getElementById("user"+i);
-				username.innerHTML = "<b>"+res.data[i-1].name+"</b>";
+				username.innerHTML = "<b>"+user.name+"</b>";
 			}
 		}
 	}

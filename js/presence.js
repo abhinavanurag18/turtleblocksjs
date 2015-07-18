@@ -88,10 +88,12 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 				case msgListUsers :
 					// console.log(res);
 					me.OnlineUsers = res.data;
-					me.collab.fillUsers(res,groupId);
+					me.collab.userList = res.data;
+					// me.collab.fillUsers(res,groupId);
 					break;
 				case msgCreateSharedActivity :
 					groupId = res.data;
+					me.collab.groupId = groupId;
 					shared = 1;
 					me.shared = true;
 					var groupDiv = docById('share');
@@ -105,12 +107,14 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					break;
 				case msgListSharedActivities :
 					me.activeGroups = res.data;
+					me.collab.groupList = res;
 					me.collab.fillGroups(res);
 					break;
 				case msgJoinSharedActivity :
 					groupId = res.data.id;
 					var groupDiv = docById('groupMessage');
 					me.connected_to = res.data.users[0];
+					me.collab.groupId = groupId;
 					var user = me.getUser(res.data.users[0]);
 					groupDiv.innerHTML = "Present Group : " + user.name;
 					// var syncEl = docById('syncElem');
