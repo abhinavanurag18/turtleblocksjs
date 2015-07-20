@@ -279,3 +279,19 @@ body {
 	text-align: center;
 	/*display: none;*/
 }
+
+.footertab {
+	position: absolute;
+	bottom : 10px;
+	height : 10%;
+	width: 100%;
+}
+
+.consoleTab {
+	position: absolute;
+	bottom: 5px;
+	left: 10px;
+	width: 90%;
+	height: 7%;
+	text-align: center;
+}

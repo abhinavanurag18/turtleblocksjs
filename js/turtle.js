@@ -24,6 +24,9 @@ function Turtle (name, turtles) {
     this.name = name;
     this.turtles = turtles;
     this.peername = '';
+    this.peerntid = null;
+    this.peercolorvalue = null;
+    this.uuid = null;
     // Is the turtle running?
     this.running = false;
 
@@ -716,6 +719,11 @@ function Turtles(canvas, stage, refreshCanvas) {
     this.refreshCanvas = refreshCanvas;
     this.scale = 1.0;
     this.rotating = false;
+    this.presence = null;
+    var me = this;
+    this.setPresence = function(presence){
+        me.presence = presence;
+    }
 
     this.setScale = function(scale) {
         this.scale = scale;
@@ -746,7 +754,9 @@ function Turtles(canvas, stage, refreshCanvas) {
 
         var i = this.turtleList.length;
         var turtleName = i.toString();
+        var uuid = createUUID();
         var myTurtle = new Turtle(turtleName, this);
+        myTurtle.uuid = uuid;
 
         if (blkInfoAvailable) {
             myTurtle.x = infoDict['xcor'];
@@ -804,7 +814,9 @@ function Turtles(canvas, stage, refreshCanvas) {
 
         myTurtle.color = i * 10;
         myTurtle.canvasColor = getMunsellColor(myTurtle.color, DEFAULTVALUE, DEFAULTCHROMA);
-
+        // if(this.presence.connected_to != 0){
+        //     this.presence.sendNewTurtle(myTurtle);
+        // }
         var turtles = this;
 
         myTurtle.container.on('mousedown', function(event) {
@@ -816,11 +828,12 @@ function Turtles(canvas, stage, refreshCanvas) {
                 x: myTurtle.container.x - (event.stageX / turtles.scale),
                 y: myTurtle.container.y - (event.stageY / turtles.scale)
             }
-
+            me.presence.moveTurtle(myTurtle.uuid, myTurtle.x, myTurtle.y, myTurtle.orientation);
             myTurtle.container.on('pressmove', function(event) {
                 if (myTurtle.running) {
                     return;
                 }
+                me.presence.moveTurtle(myTurtle.uuid, myTurtle.x, myTurtle.y, myTurtle.orientation);
                 myTurtle.container.x = (event.stageX / turtles.scale) + offset.x;
                 myTurtle.container.y = (event.stageY / turtles.scale) + offset.y;
                 myTurtle.x = turtles.screenX2turtleX(myTurtle.container.x);
@@ -831,11 +844,16 @@ function Turtles(canvas, stage, refreshCanvas) {
 
         myTurtle.container.on('click', function(event) {
             // If turtles listen for clicks then they can be used as buttons.
-            alert("it works");
+            // alert("it works");
             turtles.stage.dispatchEvent('click' + myTurtle.name);
         });
 
         myTurtle.container.on('mouseover', function(event) {
+            // alert(myTurtle.peername + "'s turtle");
+            var clog = docById('console');
+            if(myTurtle.peerntid != null){
+                clog.innerHTML = myTurtle.peername + "'s turtle x : " + myTurtle.x + " y : " + myTurtle.y + " uuid : " + myTurtle.uuid;
+            }
             myTurtle.bitmap.scaleX = 1.2;
             myTurtle.bitmap.scaleY = 1.2;
             myTurtle.bitmap.scale = 1.2;
@@ -843,6 +861,8 @@ function Turtles(canvas, stage, refreshCanvas) {
         });
 
         myTurtle.container.on('mouseout', function(event) {
+            var clog = docById('console');
+            clog.innerHTML = '';
             myTurtle.bitmap.scaleX = 1;
             myTurtle.bitmap.scaleY = 1;
             myTurtle.bitmap.scale = 1;
@@ -917,4 +937,18 @@ function makeTurtleBitmap(me, data, name, callback, extras) {
     };
     img.src = 'data:image/svg+xml;base64,' + window.btoa(
         unescape(encodeURIComponent(data)));
+};
+
+function createUUID() {
+    var s = [];
+    var hexDigits = "0123456789abcdef";
+    for (var i = 0; i < 36; i++) {
+        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    }
+    s[14] = "4";
+    s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
+    s[8] = s[13] = s[18] = s[23] = "-";
+
+    var uuid = s.join("");
+    return uuid;
 };

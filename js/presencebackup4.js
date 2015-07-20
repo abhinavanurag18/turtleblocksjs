@@ -17,9 +17,6 @@ var msgOnSharedActivityUserChanged = 7;
 var msgSendMessage = 8;
 var msgBlockData = 9;
 var msgTurtleData = 10;
-var msgTurtleDataRequest = 11;
-var turtleUpdate = 1;
-var turtleCreate = 2;
 var groupId = null;
 var shared = 0;
 var xoPalette = xocolor;
@@ -38,7 +35,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 	this.blocks = blocks;
 	this.logo = null;
 	this.shared = false;
-	this.server = "ws://server.sugarizer.org:8039";
+	this.server = "ws://localhost:8039";
 	this.socket = null;
 	this.testSocket = null;
 	this.collab = null;
@@ -127,8 +124,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					// syncEl.style.display = "block";
 					var sideElem = docById('sideElem');
 					sideElem.style.backgroundColor = res.data.colorvalue.fill;
-					me.addPeers(res.data.users);
-					me.sendTurtleSyncRequest();
 					
 					break;
 				case msgSendMessage :
@@ -144,121 +139,66 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 									console.log("Inside else");
 									for(var i in tid){
 										var myBlock = tid[i].startBlock;
-										// console.log("Block getting trashed : " + myBlock);
-										if(myBlock != null){
-											sendStackToTrashCollab(me.blocks,myBlock);	
-										}
-										
+										sendStackToTrash(me.blocks,myBlock);
 									}
 								}
 								var currentTurtles = turtles.turtleList;
 								var prelen = currentTurtles.length;
-								// me.mapTurtles(res.data.content);
 								me.loadRawProject(res.data.content);
-								console.log("Its loaded : " + tid.length);
-								// var peerTurtles = [];
-								// setTimeout(function(){
-								// 	var afterLoadTurtles = turtles.turtleList;
-								// 	var j = 0;
-								// 	for(var i in afterLoadTurtles){
-								// 		if(j < prelen){
-								// 			j++;
-								// 			continue;
-								// 		}
-								// 		else {
-								// 			afterLoadTurtles[i].peername = res.data.user.name;
-								// 			afterLoadTurtles[i].peerntid = res.data.user.networkId;
-								// 			afterLoadTurtles[i].peercolorvalue = res.data.user.colorvalue;
-								// 			peerTurtles.push(afterLoadTurtles[i]);
-								// 		}
-								// 		j++;
-								// 	}
-								// 	for(var i in me.peers){
-								// 		if(me.peers[i].user.networkId == res.data.user.networkId){
-								// 			for(var j in peerTurtles){
-								// 				me.peers[i].turtleList.push(peerTurtles[j]);
-								// 			}
-								// 		}
-								// 		else {
-								// 			var peerdata = { user : res.data.user, turtleList : []};
-								// 			for(var j in peerTurtles){
-								// 				peerdata.turtleList.push(peerTurtles[j]);
-								// 			}
-								// 			me.peers.push(peerdata);
-								// 		}
-								// 	}
-								// 	for(var h in peerTurtles){
-
-								// 		me.logo.runLogoCommands(me.blocks.blockList.indexOf(peerTurtles[h].startBlock));
-								// 		sendStackToTrash(me.blocks,peerTurtles[h].startBlock);
-								// 		// var img = 
-								// 		// peerTurtles[h].doTurtleShell(55,TURTLESVG.replace(/fill_color/g, res.data.user.colorvalue.fill).replace(/stroke_color/g, res.data.user.colorvalue.stroke));
-								// 		// console.log(peerTurtles[h].bitmap);
-
-								// 	}
-								// },500);
+								console.log("Its loaded");
+								var peerTurtles = [];
 								setTimeout(function(){
-									for(var i in tid){
-										me.logo.runLogoCommands(me.blocks.blockList.indexOf(tid[i].startBlock));
-										sendStackToTrashCollab(me.blocks,tid[i].startBlock);
-										// tid[i].container.visibile = true;
+									var afterLoadTurtles = turtles.turtleList;
+									var j = 0;
+									for(var i in afterLoadTurtles){
+										if(j < prelen){
+											j++;
+											continue;
+										}
+										else {
+											afterLoadTurtles[i].peername = res.data.user.name;
+											afterLoadTurtles[i].peerntid = res.data.user.networkId;
+											afterLoadTurtles[i].peercolorvalue = res.data.user.colorvalue;
+											peerTurtles.push(afterLoadTurtles[i]);
+										}
+										j++;
 									}
-									// me.turtles.refreshCanvas();
-								},500);
-								
+									for(var i in me.peers){
+										if(me.peers[i].user.networkId == res.data.user.networkId){
+											for(var j in peerTurtles){
+												me.peers[i].turtleList.push(peerTurtles[j]);
+											}
+										}
+										else {
+											var peerdata = { user : res.data.user, turtleList : []};
+											for(var j in peerTurtles){
+												peerdata.turtleList.push(peerTurtles[j]);
+											}
+											me.peers.push(peerdata);
+										}
+									}
+									for(var h in peerTurtles){
 
+										me.logo.runLogoCommands(me.blocks.blockList.indexOf(peerTurtles[h].startBlock));
+										sendStackToTrashCollab(me.blocks,peerTurtles[h].startBlock);
+										// var img = 
+										// peerTurtles[h].doTurtleShell(55,TURTLESVG.replace(/fill_color/g, res.data.user.colorvalue.fill).replace(/stroke_color/g, res.data.user.colorvalue.stroke));
+										// console.log(peerTurtles[h].bitmap);
+
+									}
+								},500); 
 							}
 							break;
 						case msgTurtleData :
-							if(res.data.user.networkId != ntId){
-								var data1 = res.data.content;
-								var status = res.data.status;
-								if(status == turtleCreate){
-									for(var i in data1){
-										me.turtles.add(null);
-										var len = me.turtles.turtleList.length;
-										var myTurtle = me.turtles.turtleList[len-1];
-										myTurtle.uuid = data1[i].uuid;
-										myTurtle.peername = res.data.user.name;
-										myTurtle.peerntid = res.data.user.networkId;
-										myTurtle.peercolorvalue = res.data.user.colorvalue;
-										myTurtle.container.x = me.turtles.turtleX2screenX(data1[i].x);
-										myTurtle.container.y = me.turtles.turtleY2screenY(data1[i].y);
-										myTurtle.container.rotation = data1[i].deg;
-										myTurtle.orientation = data1[i].deg;
-										myTurtle.x = data1[i].x;
-										myTurtle.y = data1[i].y;
-										for(var i in me.peers){
-											if(me.peers[i].user.networkId == res.data.user.networkId){
-												me.peers[i].turtleList.push(myTurtle);
-											}
-										}
-
-									}
-									me.turtles.refreshCanvas();
+							var data1 = res.data.content;
+							for(var i in me.turtles.turtleList){
+								alert("uuid : " + me.turtles.turtleList[i].uuid);
+								if(me.turtles.turtleList[i].uuid == data1.uuid){
+									var clog = docById('console');
+						            // if(myTurtle.peerntid != null){
+						            clog.innerHTML = myTurtle.peername + "'s turtle is moving :  x : " + myTurtle.x + " y : " + myTurtle.y;
 								}
-								else if(status == turtleUpdate){
-									
-									for(var j in me.turtles.turtleList){
-										if(me.turtles.turtleList[j].uuid == data1.uuid){
-											var myTurtle = me.turtles.turtleList[j];
-											myTurtle.container.x = me.turtles.turtleX2screenX(data1.x);
-											myTurtle.container.y = me.turtles.turtleY2screenY(data1.y);
-											myTurtle.container.rotation = data1.deg;
-											myTurtle.orientation = data1.deg;
-											myTurtle.x = data1.x;
-											myTurtle.y = data1.y;
-										}
-									}
-									
-									me.turtles.refreshCanvas();
-								}	
 							}
-							
-							break;
-
-						case msgTurtleDataRequest :
-							me.turtleSync(turtleCreate);
 							break;
 					}
 					
@@ -273,7 +213,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 					}
 					else {
 						me.peers.push(peerdata);
-						console.log(me.peers);
 
 					}
 					
@@ -281,34 +220,6 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 			}
 		}
 		
-	}
-
-	this.addPeers = function(userList){
-		for(var i in userList){
-			var user = me.getUser(userList[i]);
-			var peerdata = { user : user, turtleList : []};
-			me.peers.push(peerdata);
-		}
-		console.log(me.peers);
-		
-	}
-
-	this.mapTurtles = function(data){
-		// for(var i in data){
-		// 	if(data[i][1][0] == "start"){
-		// 		var uuid = data[i][1][1].uuid;
-		// 		for(var j in me.turtles.turtleList){
-		// 			if(me.turtles.turtleList[i].uuid == uuid){
-
-		// 			}
-		// 		}
-		// 	}
-		// }
-	}
-
-	this.sendTurtleSyncRequest = function(){
-		var msg = {type : msgSendMessage, group : groupId, data : {user : message1 , datatype : msgTurtleDataRequest}};
-		me.socket.send(JSON.stringify(msg));
 	}
 
 	this.getUsersGroup = function(gid){
@@ -358,35 +269,24 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
         me.sendMessage(data);
 	}
 
-	this.sendNewTurtle = function(turtle){
-		if(turtle.peerntid == null){
-			// var data = [{uuid : turtle.uuid, x : turtle.x , y : turtle.y , deg : turtle.orientation}];
-			// var msg3 = {type : msgSendMessage, group : groupId, data : {user : message1 , datatype : msgTurtleData, content : data, status : turtleCreate}};
-			// me.socket.send(JSON.stringify(msg3));
-			console.log(turtle);
-		}
-	}
-
-	this.turtleSync = function(status){
+	this.turtleSync = function(){
 		var data = [];
 		for(var i in me.turtles.turtleList){
-			if(me.turtles.turtleList[i].peername == ''){
-				var uuid = me.turtles.turtleList[i].uuid;
-				var x = me.turtles.turtleList[i].x;
-				var y = me.turtles.turtleList[i].y;
-				var deg = me.turtles.turtleList[i].orientation;
-				var data1 = {uuid : uuid, x : x , y : y , deg : deg};
-				data.push(data1);
-			}
+			var uuid = me.turtles.turtleList[i].uuid;
+			var x = me.turtles.turtleList[i].x;
+			var y = me.turtles.turtleList[i].y;
+			var deg = me.turtles.turtleList[i].orientation;
+			var data1 = {uuid : uuid, x : x , y : y , deg : deg};
+			data.push(data1);
 		}
 		// me.sendMessage(data);
-		var msg3 = {type : msgSendMessage, group : groupId, data : {user : message1 , datatype : msgTurtleData, content : data, status : status	}};
+		var msg3 = {type : msgSendMessage, group : groupId, data : {user : message1 , datatype : msgTurtleData, content : data}};
 		me.socket.send(JSON.stringify(msg3));
 	}
 
 	this.moveTurtle = function(uuid,x,y,deg){
 		var data = {uuid : uuid, x : x , y : y , deg : deg};
-		var msg3 = {type : msgSendMessage, group : groupId, data : {user : message1 , datatype : msgTurtleData, content : data, status : turtleUpdate}};
+		var msg3 = {type : msgSendMessage, group : groupId, data : {user : message1 , datatype : msgTurtleData, content : data}};
 		me.socket.send(JSON.stringify(msg3));
 	}
 

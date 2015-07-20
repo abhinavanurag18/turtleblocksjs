@@ -1995,6 +1995,7 @@ function Blocks(canvas, stage, refreshCanvas, trashcan, updateStage) {
                             this.blocksToCollapse.push(this.blockList.length + b);
                         }
                     }
+                    
                     break;
                 default:
                     break;
@@ -2140,8 +2141,28 @@ function Blocks(canvas, stage, refreshCanvas, trashcan, updateStage) {
                     postProcess = function(args) {
                         var thisBlock = args[0];
                         var blkInfo = args[1];
-                        me.blockList[thisBlock].value = me.turtles.turtleList.length;
-                        me.turtles.add(me.blockList[thisBlock], blkInfo);
+                        
+                        var uuid = blkInfo['uuid'];
+                        if(uuid != null){
+                            var found = false;
+                            for(var i in me.turtles.turtleList){
+                                if(uuid == me.turtles.turtleList[i].uuid){
+                                    found = true;
+                                    me.blockList[thisBlock].value = i;
+                                    me.turtles.turtleList[i].startBlock = me.blockList[thisBlock];
+                                }
+                            }
+                            if(!found){
+                                me.blockList[thisBlock].value = me.turtles.turtleList.length;
+                                me.turtles.add(me.blockList[thisBlock],blkInfo);
+                            }
+                        }
+                        else {
+                            me.blockList[thisBlock].value = me.turtles.turtleList.length;
+                            me.turtles.add(me.blockList[thisBlock], blkInfo);    
+                        }
+                        
+
                     }
                     this.makeNewBlockWithConnections('start', blockOffset, blkData[4], postProcess, [thisBlock, blkInfo[1]], collapsed);
                     break;

@@ -414,6 +414,7 @@ define(function(require) {
             palettes = initPalettes(canvas, refreshCanvas, palettesContainer, cellSize, refreshCanvas, trashcan, blocks);
             // presence.testServer();
             presence.setCollab(collabBox);
+            turtles.setPresence(presence);
             if(!(localStorage.name == undefined || localStorage.color == undefined)){
                 presence.connectToServer(presence.registerUser);
             }
@@ -1367,7 +1368,8 @@ define(function(require) {
                                 'color': turtle.color,
                                 'shade': turtle.value,
                                 'pensize': turtle.stroke,
-                                'grey': turtle.chroma};
+                                'grey': turtle.chroma,
+                                'uuid' : turtle.uuid};
                 } else if (myBlock.name == 'action') {
                     var args = {'collapsed': myBlock.collapsed}
                 } else if (myBlock.name == 'namedbox') {
