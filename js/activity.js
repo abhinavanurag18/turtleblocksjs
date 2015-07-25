@@ -1100,10 +1100,11 @@ define(function(require) {
         function loadRawProject(data) {
             console.log('loadRawProject ' + data);
             document.body.style.cursor = 'wait';
-            allClear();
+            // allClear();
             var obj = JSON.parse(data);
+            // callback();
             blocks.loadNewBlocks(obj);
-
+            // callback();
             docById('loading-image-container').style.display = 'none';
             document.body.style.cursor = 'default';
         }

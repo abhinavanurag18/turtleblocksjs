@@ -146,7 +146,7 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 										var myBlock = tid[i].startBlock;
 										// console.log("Block getting trashed : " + myBlock);
 										if(myBlock != null){
-											sendStackToTrashCollab(me.blocks,myBlock);	
+											// sendStackToTrashCollab(me.blocks,myBlock);	
 										}
 										
 									}
@@ -199,10 +199,26 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 								// },500);
 								setTimeout(function(){
 									for(var i in tid){
+										// setTimeout(function(){ 
+											me.turtles.refreshCanvas();
+											var turtleList = me.turtles.turtleList;
+									        for(var t in turtleList){
+									        	console.log("Before runLogoCommands : " + turtleList[t].peername + " x : " + turtleList[t].x + " y : " + turtleList[t].y);
+									        }
+										// },2000);
 										me.logo.runLogoCommands(me.blocks.blockList.indexOf(tid[i].startBlock));
+										
+								        // setTimeout(function(){ me.turtles.refreshCanvas(); },500);
 										sendStackToTrashCollab(me.blocks,tid[i].startBlock);
 										// tid[i].container.visibile = true;
 									}
+									setTimeout(function(){ 
+										me.turtles.refreshCanvas();
+										var turtleList = me.turtles.turtleList;
+								        for(var t in turtleList){
+								        	console.log("After runLogoCommands : " + turtleList[t].peername + " x : " + turtleList[t].x + " y : " + turtleList[t].y);
+								        }
+									},2000);
 									// me.turtles.refreshCanvas();
 								},500);
 								
@@ -281,6 +297,13 @@ function SugarPresence(loadRawProject,saveLocally,turtles,blocks){
 			}
 		}
 		
+	}
+
+	this.loadCallback = function(){
+		var turtleList = me.turtles.turtleList;
+        for(var t in turtleList){
+        	console.log("On callback : " + turtleList[t].peername + " x : " + turtleList[t].x + " y : " + turtleList[t].y);
+        }
 	}
 
 	this.addPeers = function(userList){
@@ -627,5 +650,8 @@ function sendStackToTrashCollab(blocks, myBlock) {
         blocks.blockList[blk].hide();
         blocks.refreshCanvas();
     }
+    var turtleList = blocks.turtles.turtleList;
+    for(var t in turtleList){
+    	console.log(turtleList[t].peername + " x : " + turtleList[t].x + " y : " + turtleList[t].y);
+    }
 }
-
